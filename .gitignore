@@ -25,3 +25,5 @@ frontend/.env       ← tokens, URLs d'API
 # OS
 .DS_Store
 Thumbs.db
+
+.idea/
