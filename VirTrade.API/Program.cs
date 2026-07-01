@@ -4,6 +4,8 @@ using Microsoft.OpenApi;
 using System.Text;
 using VirTrade.Infrastructure.Notifications;
 using VirTrade.API.Middlewares;
+using Microsoft.EntityFrameworkCore;
+using VirTrade.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,8 +92,10 @@ builder.Services.AddAuthorization();
 
 // SignalR
 builder.Services.AddScoped<SignalRNotifier>();
-builder.Services.AddSignalR();
 
+builder.Services.AddSignalR();
+builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 var app = builder.Build();
 
 // === Pipeline ===

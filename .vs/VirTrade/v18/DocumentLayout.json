@@ -1,12 +1,37 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\Projet\\ProjetC#\\VirTrade\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|solutionrelative:virtrade.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Program.cs",
+              "RelativeDocumentMoniker": "VirTrade.API\\Program.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Program.cs",
+              "RelativeToolTip": "VirTrade.API\\Program.cs",
+              "ViewState": "AgIAAEwAAAAAAAAAAAAAAGQAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-01T16:22:47.786Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
