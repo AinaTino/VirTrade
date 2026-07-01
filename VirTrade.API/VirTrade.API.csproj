@@ -14,11 +14,16 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\VirTrade.Core\VirTrade.Core.csproj" />
       <ProjectReference Include="..\VirTrade.Infrastructure\VirTrade.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Hubs\" />
     </ItemGroup>
 
 </Project>

@@ -17,4 +17,8 @@
       <ProjectReference Include="..\VirTrade.Core\VirTrade.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Persistence\Configurations\" />
+    </ItemGroup>
+
 </Project>

@@ -1,0 +1,126 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Projet\\ProjetC#\\VirTrade\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|solutionrelative:virtrade.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E80DE173-F0B5-4D72-A8A2-27D6FB66FB64}|VirTrade.Infrastructure\\VirTrade.Infrastructure.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.infrastructure\\notifications\\signalrnotifier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E80DE173-F0B5-4D72-A8A2-27D6FB66FB64}|VirTrade.Infrastructure\\VirTrade.Infrastructure.csproj|solutionrelative:virtrade.infrastructure\\notifications\\signalrnotifier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E80DE173-F0B5-4D72-A8A2-27D6FB66FB64}|VirTrade.Infrastructure\\VirTrade.Infrastructure.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.infrastructure\\notifications\\boursehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E80DE173-F0B5-4D72-A8A2-27D6FB66FB64}|VirTrade.Infrastructure\\VirTrade.Infrastructure.csproj|solutionrelative:virtrade.infrastructure\\notifications\\boursehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.api\\controllers\\leaderboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|solutionrelative:virtrade.api\\controllers\\leaderboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.api\\controllers\\portfoliocontrollers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|solutionrelative:virtrade.api\\controllers\\portfoliocontrollers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|d:\\projet\\projetc#\\virtrade\\virtrade.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{75105C91-6026-4E8D-9C50-6182193D4E80}|VirTrade.API\\VirTrade.API.csproj|solutionrelative:virtrade.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Program.cs",
+              "RelativeDocumentMoniker": "VirTrade.API\\Program.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Program.cs",
+              "RelativeToolTip": "VirTrade.API\\Program.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAkwF0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:42:38.959Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "SignalRNotifier.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.Infrastructure\\Notifications\\SignalRNotifier.cs",
+              "RelativeDocumentMoniker": "VirTrade.Infrastructure\\Notifications\\SignalRNotifier.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.Infrastructure\\Notifications\\SignalRNotifier.cs",
+              "RelativeToolTip": "VirTrade.Infrastructure\\Notifications\\SignalRNotifier.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:41:32.855Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "BourseHub.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.Infrastructure\\Notifications\\BourseHub.cs",
+              "RelativeDocumentMoniker": "VirTrade.Infrastructure\\Notifications\\BourseHub.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.Infrastructure\\Notifications\\BourseHub.cs",
+              "RelativeToolTip": "VirTrade.Infrastructure\\Notifications\\BourseHub.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:37:47.987Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LeaderboardController.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\LeaderboardController.cs",
+              "RelativeDocumentMoniker": "VirTrade.API\\Controllers\\LeaderboardController.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\LeaderboardController.cs",
+              "RelativeToolTip": "VirTrade.API\\Controllers\\LeaderboardController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:31:17.219Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PortfolioControllers.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\PortfolioControllers.cs",
+              "RelativeDocumentMoniker": "VirTrade.API\\Controllers\\PortfolioControllers.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\PortfolioControllers.cs",
+              "RelativeToolTip": "VirTrade.API\\Controllers\\PortfolioControllers.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:27:48.469Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "VirTrade.API\\Controllers\\AuthController.cs",
+              "ToolTip": "D:\\Projet\\ProjetC#\\VirTrade\\VirTrade.API\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "VirTrade.API\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T16:23:35.172Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
