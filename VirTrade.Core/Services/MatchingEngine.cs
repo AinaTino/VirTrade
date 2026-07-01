@@ -1,4 +1,5 @@
 ﻿using VirTrade.Core.Entities;
+using VirTrade.Core.Enums;
 using VirTrade.Core.Interfaces;
 
 namespace VirTrade.Core.Services;
@@ -54,13 +55,12 @@ public class MatchingEngine(
             bid.QuantiteExecutee += qteMatch;
             ask.QuantiteExecutee += qteMatch;
 
-            // 3. Mettre à jour les statuts
-            bid.Statut = bid.QuantiteExecutee >= bid.Quantite ? "FILLED" : "PARTIAL";
-            ask.Statut = ask.QuantiteExecutee >= ask.Quantite ? "FILLED" : "PARTIAL";
+            // Après
+            bid.Statut = bid.QuantiteExecutee >= bid.Quantite ? StatutOrdre.Filled : StatutOrdre.Partial;
+            ask.Statut = ask.QuantiteExecutee >= ask.Quantite ? StatutOrdre.Filled : StatutOrdre.Partial;
 
-            // 4. Retirer les ordres remplis du book
-            if (bid.Statut == "FILLED") orderBookService.Retirer(bid);
-            if (ask.Statut == "FILLED") orderBookService.Retirer(ask);
+            if (bid.Statut == StatutOrdre.Filled) orderBookService.Retirer(bid);
+            if (ask.Statut == StatutOrdre.Filled) orderBookService.Retirer(ask);
 
             // 5. Persister tout en DB (trade + ordres + positions + portefeuilles + stock + OHLC)
             await repository.PersisterTradeAsync(trade, bid, ask, qteMatch, prixExecution);

@@ -22,4 +22,31 @@ public class Position
     public int StockId { get; set; }
 
     public Stock Stock { get; set; }
+
+    // -----------------------------------------------------------------------
+    // Méthodes métier
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// PnL de la position = (PrixActuel - PrixMoyenAchat) × QuantiteDetenue
+    /// </summary>
+    public decimal CalculerPnLPosition()
+        => (Stock.PrixActuel - PrixMoyenAchat) * QuantiteDetenue;
+
+    /// <summary>
+    /// Mise à jour du prix moyen pondéré après un achat.
+    /// Formule doc section 1.5 :
+    /// PrixMoyen = (QteActuelle × PrixMoyenActuel + NouvelleQte × NouveauPrix)
+    ///             / (QteActuelle + NouvelleQte)
+    /// </summary>
+    public void MettreAJour(int qte, decimal prix)
+    {
+        var nouvelleQte = QuantiteDetenue + qte;
+
+        PrixMoyenAchat = nouvelleQte == 0
+            ? 0
+            : (QuantiteDetenue * PrixMoyenAchat + qte * prix) / nouvelleQte;
+
+        QuantiteDetenue = nouvelleQte;
+    }
 }

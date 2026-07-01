@@ -10,10 +10,12 @@ public class Ordre
     public int Id { get; set; }
 
     [Required]
-    public required BookType Type { get; set; }
-
+    public required TypeOrdre TypeOrdre { get; set; }
+    
     [Required]
-    public required Sens Sens { get; set; }
+    public required SensOrdre SensOrdre { get; set; }
+    
+
 
     [Required]
     public int Quantite { get; set; }
@@ -23,8 +25,8 @@ public class Ordre
     [Column(TypeName = "decimal(18,4)")]
     public decimal? PrixLimite { get; set; }
 
-    [Required, MaxLength(20)]
-    public string Statut { get; set; } = "OPEN";
+    [Required]
+    public StatutOrdre Statut { get; set; } = StatutOrdre.Open;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
