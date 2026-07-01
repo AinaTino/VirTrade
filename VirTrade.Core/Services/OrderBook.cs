@@ -30,12 +30,12 @@ public class OrderBook
     {
         lock (_lock)
         {
-            var book = ordre.Sens == Sens.Buy ? _bids : _asks;
+            var book = ordre.SensOrdre == SensOrdre.Buy ? _bids : _asks;
 
             // Market order : pas de PrixLimite → prix fictif pour la position
             // en tête de book (MaxValue côté bid = priorité absolue,
             // MinValue côté ask = idem)
-            var prix = ordre.Sens == Sens.Buy
+            var prix = ordre.SensOrdre == SensOrdre.Buy
                 ? ordre.PrixLimite ?? decimal.MaxValue
                 : ordre.PrixLimite ?? decimal.MinValue;
 
@@ -50,9 +50,9 @@ public class OrderBook
     {
         lock (_lock)
         {
-            var book = ordre.Sens == Sens.Buy ? _bids : _asks;
+            var book = ordre.SensOrdre == SensOrdre.Buy ? _bids : _asks;
 
-            var prix = ordre.Sens == Sens.Buy
+            var prix = ordre.SensOrdre == SensOrdre.Buy
                 ? ordre.PrixLimite ?? decimal.MaxValue
                 : ordre.PrixLimite ?? decimal.MinValue;
 
