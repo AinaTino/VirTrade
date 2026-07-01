@@ -10,10 +10,10 @@ public class Ordre
     public int Id { get; set; }
 
     [Required]
-    public required TypeOrdre Type { get; set; }
+    public required TypeOrdre TypeOrdre { get; set; }
     
     [Required]
-    public required SensOrdre Sens { get; set; }
+    public required SensOrdre SensOrdre { get; set; }
     
 
 

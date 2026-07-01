@@ -13,47 +13,46 @@ namespace VirTrade.API.Controllers;
 public class OrdersController(
     IOrderBookService orderBookService,
     IMatchingEngine matchingEngine,
-    IOrdersRepository ordersRepository) : ControllerBase
+    IOrdersRepository ordresRepository) : ControllerBase
 {
-    // -----------------------------------------------------------------------
-    // POST /api/orders — Placer un ordre
-    // -----------------------------------------------------------------------
-
+    // POST /api/orders
     [HttpPost]
     public async Task<IActionResult> PlacerOrdre([FromBody] PlacerOrdreRequest request)
     {
         var userId = ObtenirUserId();
 
-        // Validation métier : Limit Order sans prix = refus
         if (request.TypeOrdre == TypeOrdre.Limit && request.PrixLimite == null)
             return BadRequest("Un ordre Limit requiert un prix limite.");
 
-        var stock = await ordersRepository.GetStockAsync(request.Symbole);
+        var stock = await ordresRepository.GetStockAsync(request.Symbole);
         if (stock == null)
             return NotFound($"Stock '{request.Symbole}' introuvable.");
 
-        // Validation solde / position (délégué à Membre 2 via IPortefeuilleValidator)
-        var erreur = await ordersRepository.ValiderFondsAsync(userId, request, stock.PrixActuel);
+        // Validation fonds / position (diagramme séquence : API → VAL → DB)
+        var erreur = await ordresRepository.ValiderFondsAsync(
+            userId, request.SensOrdre, request.Quantite, stock.PrixActuel);
         if (erreur != null)
             return BadRequest(erreur);
 
+        var utilisateur = await ordresRepository.GetUtilisateurAsync(userId);
+
         var ordre = new Ordre
         {
-            TypeOrdre             = request.TypeOrdre,
-            SensOrdre             = request.SensOrdre,
-            Quantite         = request.Quantite,
-            PrixLimite       = request.PrixLimite,
-            StockId          = stock.Id,
-            Stock            = stock,
-            UtilisateurId    = userId,
-            Utilisateur      = await ordersRepository.GetUtilisateurAsync(userId),
-            ExpiresAt        = request.ExpiresAt,
-            Statut           = "OPEN",
-            CreatedAt        = DateTime.UtcNow
+            TypeOrdre          = request.TypeOrdre,
+            SensOrdre          = request.SensOrdre,
+            Quantite      = request.Quantite,
+            PrixLimite    = request.PrixLimite,
+            StockId       = stock.Id,
+            Stock         = stock,
+            UtilisateurId = userId,
+            Utilisateur   = utilisateur,
+            ExpiresAt     = request.ExpiresAt,
+            Statut        = StatutOrdre.Open,
+            CreatedAt     = DateTime.UtcNow
         };
 
-        // INSERT en DB d'abord → on a un Id avant d'injecter dans le book
-        await ordersRepository.InsererOrdreAsync(ordre);
+        // INSERT ordre en DB d'abord → on a un Id avant d'injecter dans le book
+        await ordresRepository.InsererOrdreAsync(ordre);
 
         // Injecter dans le book en mémoire
         orderBookService.Inject(ordre);
@@ -69,47 +68,37 @@ public class OrdersController(
         });
     }
 
-    // -----------------------------------------------------------------------
-    // GET /api/orders — Mes ordres
-    // -----------------------------------------------------------------------
-
+    // GET /api/orders
     [HttpGet]
     public async Task<IActionResult> GetOrdres([FromQuery] string? statut = null)
     {
         var userId = ObtenirUserId();
-        var ordres = await ordersRepository.GetOrdresUtilisateurAsync(userId, statut);
+        var ordres = await ordresRepository.GetOrdresUtilisateurAsync(userId, statut);
         return Ok(ordres);
     }
 
-    // -----------------------------------------------------------------------
-    // GET /api/orders/{id} — Détail d'un ordre
-    // -----------------------------------------------------------------------
-
+    // GET /api/orders/{id}
     [HttpGet("{id}")]
     public async Task<IActionResult> GetOrdre(int id)
     {
         var userId = ObtenirUserId();
-        var ordre = await ordersRepository.GetOrdreAsync(id);
+        var ordre = await ordresRepository.GetOrdreAsync(id);
 
         if (ordre == null)
             return NotFound();
 
-        // Un trader ne peut voir que ses propres ordres
         if (ordre.UtilisateurId != userId)
             return Forbid();
 
         return Ok(ordre);
     }
 
-    // -----------------------------------------------------------------------
-    // DELETE /api/orders/{id} — Annuler un ordre
-    // -----------------------------------------------------------------------
-
+    // DELETE /api/orders/{id}
     [HttpDelete("{id}")]
     public async Task<IActionResult> AnnulerOrdre(int id)
     {
         var userId = ObtenirUserId();
-        var ordre = await ordersRepository.GetOrdreAsync(id);
+        var ordre = await ordresRepository.GetOrdreAsync(id);
 
         if (ordre == null)
             return NotFound();
@@ -117,22 +106,15 @@ public class OrdersController(
         if (ordre.UtilisateurId != userId)
             return Forbid();
 
-        // On ne peut annuler que OPEN ou PARTIAL
-        if (ordre.Statut == "FILLED" || ordre.Statut == "CANCELLED")
+        if (ordre.Statut == StatutOrdre.Filled || ordre.Statut == StatutOrdre.Cancelled)
             return Conflict($"Impossible d'annuler un ordre au statut '{ordre.Statut}'.");
 
-        ordre.Statut = "CANCELLED";
-        await ordersRepository.MettreAJourOrdreAsync(ordre);
-
-        // Retirer du book en mémoire
+        ordre.Statut = StatutOrdre.Cancelled;
+        await ordresRepository.MettreAJourOrdreAsync(ordre);
         orderBookService.Retirer(ordre);
 
         return NoContent();
     }
-
-    // -----------------------------------------------------------------------
-    // Utilitaire
-    // -----------------------------------------------------------------------
 
     private int ObtenirUserId()
         => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
