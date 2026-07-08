@@ -12,18 +12,12 @@ public class FakeStockRepository : IStockRepository
     public Task EnregistrerHistoriqueAsync(int stockId, decimal prix) => Task.CompletedTask;
 }
 
-public class FakeMatchingEngine : IMatchingEngine
-{
-    public Task<List<Trade>> ExecuterAsync(Ordre nouvelOrdre)
-        => Task.FromResult(new List<Trade>());
-}
-
 public class MarketSimulatorTests
 {
     [Fact]
     public void GenererPrix_ProduitDesVariationsRealistes()
     {
-        var sim = new MarketSimulator(new FakeStockRepository(), new FakeMatchingEngine());
+        var sim = new MarketSimulator(new FakeStockRepository());
         decimal prixActuel = 150.00m;
         decimal volatilite = 0.015m;
 
@@ -37,7 +31,7 @@ public class MarketSimulatorTests
     [Fact]
     public void GenererPrix_AfficheDixTicksPourInspectionVisuelle()
     {
-        var sim = new MarketSimulator(new FakeStockRepository(), new FakeMatchingEngine());
+        var sim = new MarketSimulator(new FakeStockRepository());
         decimal prix = 150.00m;
 
         for (int i = 0; i < 10; i++)

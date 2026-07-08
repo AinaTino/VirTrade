@@ -111,7 +111,6 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 // === Membre 3 : MarketSimulator (TEMPORAIRE en attendant AppDbContext branché) ===
 builder.Services.AddSingleton<IStockRepository, FakeStockRepository>();
-builder.Services.AddSingleton<IMatchingEngine, FakeMatchingEngine>();
 builder.Services.AddSingleton<IMarketSimulator, MarketSimulator>();
 builder.Services.AddHostedService<MarketSimulatorHostedService>();
 

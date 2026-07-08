@@ -6,13 +6,11 @@ namespace VirTrade.Core.Services;
 public class MarketSimulator : IMarketSimulator
 {
     private readonly IStockRepository _stockRepository;
-    private readonly IMatchingEngine _matchingEngine;
-    private const int TickIntervalMs = 3000; // valeur par défaut, viendra de ConfigMarche plus tard
+    private const int TickIntervalMs = 3000;
 
-    public MarketSimulator(IStockRepository stockRepository, IMatchingEngine matchingEngine)
+    public MarketSimulator(IStockRepository stockRepository)
     {
         _stockRepository = stockRepository;
-        _matchingEngine = matchingEngine;
     }
 
     public async Task DemarrerAsync(CancellationToken ct)
@@ -27,15 +25,9 @@ public class MarketSimulator : IMarketSimulator
                 await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
                 await _stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
 
-                // Ordre "déclencheur" léger - jamais persisté, sert juste de contexte
-                // pour que le MatchingEngine sache quel book vérifier (Stock + Symbole)
-                stock.PrixActuel = nouveauPrix;
-                var ordreDeclencheur = new Ordre
-                {
-                    Stock = stock,
-                    StockId = stock.Id
-                };
-                await _matchingEngine.ExecuterAsync(ordreDeclencheur);
+                // TODO (J4 - en attente de Membre 1) : déclencher la vérification
+                // des Limit Orders ici, une fois qu'une méthode adaptée existe
+                // dans IMatchingEngine (voir Issue GitHub ouverte).
             }
 
             await Task.Delay(TickIntervalMs, ct);
@@ -46,13 +38,9 @@ public class MarketSimulator : IMarketSimulator
     {
         double u1 = 1.0 - Random.Shared.NextDouble();
         double u2 = 1.0 - Random.Shared.NextDouble();
-
-        double gaussien = Math.Sqrt(-2.0 * Math.Log(u1))
-                         * Math.Sin(2.0 * Math.PI * u2);
-
+        double gaussien = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
         double dt = 1.0 / (252 * 390);
         double choc = (double)volatilite * Math.Sqrt(dt) * gaussien;
-
         return prixActuel * (decimal)Math.Exp(choc);
     }
 }
