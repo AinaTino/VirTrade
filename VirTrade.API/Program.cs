@@ -8,6 +8,7 @@ using VirTrade.API.Middlewares;
 using VirTrade.Core.Interfaces;
 using VirTrade.Core.Services;
 using VirTrade.Infrastructure.Notifications;
+using VirTrade.Infrastructure.Persistence.Repositories;
 using VirTrade.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -110,7 +111,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 //builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
 
 // === Membre 3 : MarketSimulator (TEMPORAIRE en attendant AppDbContext branché) ===
-builder.Services.AddSingleton<IStockRepository, FakeStockRepository>();
+builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddSingleton<IMarketSimulator, MarketSimulator>();
 builder.Services.AddHostedService<MarketSimulatorHostedService>();
 
