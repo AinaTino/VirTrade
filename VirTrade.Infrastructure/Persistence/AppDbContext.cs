@@ -17,7 +17,7 @@ namespace VirTrade.Infrastructure.Persistence
         public DbSet<Ordre> Ordres { get; set; }
         public DbSet<Trade> Trades { get; set; }
         public DbSet<HistoriquePrix> HistoriquesPrix { get; set; }
-        // TODO : ajouter DbSet<ConfigMarche> une fois ConfigMarche.cs livré par Membre 1
+        public DbSet<ConfigMarche> ConfigsMarche { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -67,6 +67,12 @@ namespace VirTrade.Infrastructure.Persistence
                 new Stock { Id = 3, Symbole = "MSFT", NomComplet = "Microsoft Corp.", PrixActuel = 380.00m, Volatilite = 0.012m },
                 new Stock { Id = 4, Symbole = "AMZN", NomComplet = "Amazon.com Inc.", PrixActuel = 175.00m, Volatilite = 0.018m },
                 new Stock { Id = 5, Symbole = "NVDA", NomComplet = "NVIDIA Corp.", PrixActuel = 800.00m, Volatilite = 0.030m }
+            );
+            modelBuilder.Entity<ConfigMarche>().HasData(
+                new ConfigMarche { Id = 1, Cle = "capital_initial", Valeur = "100000", Description = "Capital virtuel en USD à l'inscription" },
+                new ConfigMarche { Id = 2, Cle = "tick_interval_ms", Valeur = "3000", Description = "Intervalle simulation prix en millisecondes" },
+                new ConfigMarche { Id = 3, Cle = "volatilite_defaut", Valeur = "0.015", Description = "Volatilité Brownian motion par défaut" },
+                new ConfigMarche { Id = 4, Cle = "market_impact_coeff", Valeur = "0.001", Description = "Impact prix par tranche de 1000 actions tradées" }
             );
         }
     }

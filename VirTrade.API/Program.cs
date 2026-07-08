@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
-using VirTrade.Infrastructure.Notifications;
 using VirTrade.API.Middlewares;
-using Microsoft.EntityFrameworkCore;
+using VirTrade.Core.Interfaces;
+using VirTrade.Infrastructure.Notifications;
 using VirTrade.Infrastructure.Persistence;
+using VirTrade.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +36,6 @@ builder.Services.AddSwaggerGen(c =>
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
 });
-
 
 // CORS — autoriser le frontend React
 builder.Services.AddCors(options =>
@@ -70,7 +71,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 
-    // Permet à SignalR de recevoir le JWT via query string
+    // Permet à SignalR de recevoir le JWT via query string (section 11)
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -90,12 +91,21 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// SignalR
-builder.Services.AddScoped<SignalRNotifier>();
-
+// SignalR + Notifier (section 11)
+builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
 builder.Services.AddSignalR();
+
+// Base de données SQLite (section 3 + section 12)
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// TODO : décommenter une fois Membre 1 livré IOrderRepository + IMatchingRepository
+ //builder.Services.AddScoped<IOrderBookService, OrderBookService>();
+ //builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
+
+// TODO : décommenter une fois Membre 3 terminé MarketSimulator
+// builder.Services.AddHostedService<MarketSimulator>();
+
 var app = builder.Build();
 
 // === Pipeline ===
@@ -106,6 +116,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Middleware global d'erreurs (section 10 — RFC 7807)
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
@@ -116,6 +127,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Hub SignalR (section 11 + section 15.11)
 app.MapHub<BourseHub>("/hubs/bourse");
 
 app.Run();

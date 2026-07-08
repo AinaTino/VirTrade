@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using VirTrade.Core.Entities;
+using VirTrade.Core.Interfaces;
 
 namespace VirTrade.Infrastructure.Notifications
 {
-    public class SignalRNotifier
+    public class SignalRNotifier : ISignalRNotifier
     {
         private readonly IHubContext<BourseHub> _hub;
 
@@ -11,28 +13,43 @@ namespace VirTrade.Infrastructure.Notifications
             _hub = hub;
         }
 
-        public async Task NotifierNouveauTradeAsync(string symbole, object trade)
+        // Trade exécuté → groupe du ticker concerné (section 11)
+        public async Task NotifierNouveauTradeAsync(Trade trade)
         {
-            // TODO : remplacer "object trade" par l'entité Trade une fois disponible (Membre 1)
-            await _hub.Clients.Group(symbole).SendAsync("NouveauTrade", trade);
+            await _hub.Clients.Group(trade.Stock.Symbole).SendAsync("NouveauTrade", new
+            {
+                tradeId = trade.Id,
+                symbole = trade.Stock.Symbole,
+                quantite = trade.Quantite,
+                prixExecution = trade.PrixExecution,
+                executedAt = trade.ExecutedAt
+            });
         }
 
+        // Nouveau prix → groupe du ticker concerné (section 11)
         public async Task NotifierPrixUpdateAsync(string symbole, decimal prix)
         {
-            await _hub.Clients.Group(symbole).SendAsync("PrixUpdate", new { symbole, prix, timestamp = DateTime.UtcNow });
+            await _hub.Clients.Group(symbole).SendAsync("PrixUpdate", new
+            {
+                symbole,
+                prix,
+                timestamp = DateTime.UtcNow
+            });
         }
 
+        // Snapshot order book → groupe du ticker concerné (section 11)
         public async Task NotifierOrderBookAsync(string symbole, object book)
         {
             await _hub.Clients.Group(symbole).SendAsync("OrderBookUpdate", book);
         }
 
-        public async Task NotifierPortefeuilleAsync(int userId, object portefeuille)
+        // Portefeuille mis à jour → trader concerné uniquement (section 11)
+        public async Task NotifierPortefeuilleAsync(int userId, object pf)
         {
-            // TODO : nécessite un IUserIdProvider configuré pour mapper userId -> connexion SignalR
-            await _hub.Clients.User(userId.ToString()).SendAsync("PortefeuilleUpdate", portefeuille);
+            await _hub.Clients.User(userId.ToString()).SendAsync("PortefeuilleUpdate", pf);
         }
 
+        // Leaderboard mis à jour → tous les clients (section 11)
         public async Task NotifierLeaderboardAsync(object leaderboard)
         {
             await _hub.Clients.All.SendAsync("LeaderboardUpdate", leaderboard);
