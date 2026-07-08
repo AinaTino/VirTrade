@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
-using Moq;
 using VirTrade.Core.Entities;
 using VirTrade.Core.Enums;
-using VirTrade.Core.Interfaces;
 using VirTrade.Core.Services;
 
 namespace VirTrade.Tests;
