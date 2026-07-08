@@ -1,6 +1,6 @@
 ﻿namespace VirTrade.Core.Enums;
 
-public enum Sens
+public enum SensOrdre
 {
     Buy,
     Sell

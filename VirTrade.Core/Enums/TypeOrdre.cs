@@ -1,6 +1,6 @@
 ﻿namespace VirTrade.Core.Enums;
 
-public enum BookType
+public enum TypeOrdre
 {
     Market,
     Limit
