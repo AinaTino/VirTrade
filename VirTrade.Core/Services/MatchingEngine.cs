@@ -73,6 +73,28 @@ public class MatchingEngine(
 
         return tradesExecutes;
     }
+    
+    public async Task<List<Trade>> VerifierLimitOrdersAsync(string symbole, decimal nouveauPrix)
+    {
+        var tradesExecutes = new List<Trade>();
+        var book = orderBookService.GetBook(symbole);
+
+        // Vérifier les bids devenus exécutables (Limit BUY dont prix >= nouveauPrix)
+        foreach (var bid in book.GetBids().Where(o => o.EstExecutable(nouveauPrix)))
+        {
+            var trades = await ExecuterAsync(bid);
+            tradesExecutes.AddRange(trades);
+        }
+
+        // Vérifier les asks devenus exécutables (Limit SELL dont prix <= nouveauPrix)
+        foreach (var ask in book.GetAsks().Where(o => o.EstExecutable(nouveauPrix)))
+        {
+            var trades = await ExecuterAsync(ask);
+            tradesExecutes.AddRange(trades);
+        }
+
+        return tradesExecutes;
+    }
 
     // Calibrable via ConfigMarche(cle='market_impact_coeff')
     private static decimal AppliquerMarketImpact(decimal prixActuel, int volumeTrade, SensOrdre sens)
