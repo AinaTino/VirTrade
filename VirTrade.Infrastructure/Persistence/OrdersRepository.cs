@@ -15,7 +15,7 @@ public class OrdersRepository(AppDbContext db) : IOrdersRepository
            ?? throw new InvalidOperationException($"Utilisateur {userId} introuvable.");
 
     public async Task<string?> ValiderFondsAsync(
-        int userId, SensOrdre sens, int quantite, decimal prixActuel)
+        int userId, SensOrdre sens, int quantite, decimal prixActuel, int stockId)
     {
         var portefeuille = await db.Portefeuilles
             .Include(p => p.Positions)
@@ -32,11 +32,11 @@ public class OrdersRepository(AppDbContext db) : IOrdersRepository
         }
         else
         {
-            // Pour un SELL, vérifier que l'utilisateur a les actions
-            // TODO: ajouter StockId dans la signature si besoin de précision par stock
-            var qteTotale = portefeuille.Positions.Sum(p => p.QuantiteDetenue);
-            if (qteTotale < quantite)
-                return $"Actions insuffisantes. Requis : {quantite}, Disponible : {qteTotale}";
+            var position = portefeuille.Positions.FirstOrDefault(p => p.StockId == stockId);
+            var qteDispo = position?.QuantiteDetenue ?? 0;
+
+            if (qteDispo < quantite)
+                return $"Actions insuffisantes. Requis : {quantite}, Disponible : {qteDispo}";
         }
 
         return null;
