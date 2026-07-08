@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using VirTrade.Core.Entities;
 using VirTrade.Core.Interfaces;
 
@@ -5,29 +6,29 @@ namespace VirTrade.Core.Services;
 
 public class MarketSimulator : IMarketSimulator
 {
-    private readonly IStockRepository _stockRepository;
+    private readonly IServiceScopeFactory _scopeFactory;
     private const int TickIntervalMs = 3000;
 
-    public MarketSimulator(IStockRepository stockRepository)
+    public MarketSimulator(IServiceScopeFactory scopeFactory)
     {
-        _stockRepository = stockRepository;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task DemarrerAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
         {
-            var stocks = await _stockRepository.GetAllAsync();
-
-            foreach (var stock in stocks)
+            using (var scope = _scopeFactory.CreateScope())
             {
-                decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
-                await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
-                await _stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
+                var stockRepository = scope.ServiceProvider.GetRequiredService<IStockRepository>();
+                var stocks = await stockRepository.GetAllAsync();
 
-                // TODO (J4 - en attente de Membre 1) : déclencher la vérification
-                // des Limit Orders ici, une fois qu'une méthode adaptée existe
-                // dans IMatchingEngine (voir Issue GitHub ouverte).
+                foreach (var stock in stocks)
+                {
+                    decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
+                    await stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
+                    await stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
+                }
             }
 
             await Task.Delay(TickIntervalMs, ct);

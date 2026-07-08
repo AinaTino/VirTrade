@@ -19,7 +19,6 @@ public class MatchingEngine(
             var bid = book.MeilleurBid();
             var ask = book.MeilleurAsk();
 
-            // Condition de match : bid existe, ask existe, bid >= ask
             if (bid == null || ask == null)
                 break;
 
@@ -29,47 +28,43 @@ public class MatchingEngine(
             if (prixBid < prixAsk)
                 break;
 
-            // Prix d'exécution = resting order (ask = celui qui était déjà dans le book)
             var prixExecution = ask.PrixLimite ?? nouvelOrdre.Stock.PrixActuel;
+            var qteBid        = bid.QuantiteRestante();
+            var qteAsk        = ask.QuantiteRestante();
+            var qteMatch      = Math.Min(qteBid, qteAsk);
 
-            // Quantité : le minimum des deux quantités restantes
-            var qteBid = bid.Quantite - bid.QuantiteExecutee;
-            var qteAsk = ask.Quantite - ask.QuantiteExecutee;
-            var qteMatch = Math.Min(qteBid, qteAsk);
-
-            // 1. Créer le trade
             var trade = new Trade
             {
-                Quantite        = qteMatch,
-                PrixExecution   = prixExecution,
-                BuyOrderId      = bid.Id,
-                BuyOrder        = bid,
-                SellOrderId     = ask.Id,
-                SellOrder       = ask,
-                StockId         = nouvelOrdre.StockId,
-                Stock           = nouvelOrdre.Stock,
-                ExecutedAt      = DateTime.UtcNow
+                Quantite      = qteMatch,
+                PrixExecution = prixExecution,
+                BuyOrderId    = bid.Id,
+                BuyOrder      = bid,
+                SellOrderId   = ask.Id,
+                SellOrder     = ask,
+                StockId       = nouvelOrdre.StockId,
+                Stock         = nouvelOrdre.Stock,
+                ExecutedAt    = DateTime.UtcNow
             };
 
-            // 2. Mettre à jour les quantités exécutées
             bid.QuantiteExecutee += qteMatch;
             ask.QuantiteExecutee += qteMatch;
 
-            // Après
             bid.Statut = bid.QuantiteExecutee >= bid.Quantite ? StatutOrdre.Filled : StatutOrdre.Partial;
             ask.Statut = ask.QuantiteExecutee >= ask.Quantite ? StatutOrdre.Filled : StatutOrdre.Partial;
 
             if (bid.Statut == StatutOrdre.Filled) orderBookService.Retirer(bid);
             if (ask.Statut == StatutOrdre.Filled) orderBookService.Retirer(ask);
 
-            // 5. Persister tout en DB (trade + ordres + positions + portefeuilles + stock + OHLC)
             await repository.PersisterTradeAsync(trade, bid, ask, qteMatch, prixExecution);
+
+            // Appliquer le market impact sur le prix du stock
+            var nouveauPrix = AppliquerMarketImpact(prixExecution, qteMatch, bid.SensOrdre);
+            nouvelOrdre.Stock.PrixActuel = nouveauPrix;
 
             tradesExecutes.Add(trade);
 
-            // 6. Notifier les clients SignalR
             await notifier.NotifierNouveauTradeAsync(trade);
-            await notifier.NotifierPrixUpdateAsync(nouvelOrdre.Stock.Symbole, prixExecution);
+            await notifier.NotifierPrixUpdateAsync(nouvelOrdre.Stock.Symbole, nouveauPrix);
             await notifier.NotifierOrderBookAsync(
                 nouvelOrdre.Stock.Symbole,
                 new { Bids = book.GetBids(), Asks = book.GetAsks() }
@@ -77,5 +72,38 @@ public class MatchingEngine(
         }
 
         return tradesExecutes;
+    }
+    
+    public async Task<List<Trade>> VerifierLimitOrdersAsync(string symbole, decimal nouveauPrix)
+    {
+        var tradesExecutes = new List<Trade>();
+        var book = orderBookService.GetBook(symbole);
+
+        // Vérifier les bids devenus exécutables (Limit BUY dont prix >= nouveauPrix)
+        foreach (var bid in book.GetBids().Where(o => o.EstExecutable(nouveauPrix)))
+        {
+            var trades = await ExecuterAsync(bid);
+            tradesExecutes.AddRange(trades);
+        }
+
+        // Vérifier les asks devenus exécutables (Limit SELL dont prix <= nouveauPrix)
+        foreach (var ask in book.GetAsks().Where(o => o.EstExecutable(nouveauPrix)))
+        {
+            var trades = await ExecuterAsync(ask);
+            tradesExecutes.AddRange(trades);
+        }
+
+        return tradesExecutes;
+    }
+
+    // Calibrable via ConfigMarche(cle='market_impact_coeff')
+    private static decimal AppliquerMarketImpact(decimal prixActuel, int volumeTrade, SensOrdre sens)
+    {
+        decimal coefficientImpact = 0.001m;
+        decimal impact = (volumeTrade / 1000m) * coefficientImpact;
+
+        return sens == SensOrdre.Buy
+            ? prixActuel * (1 + impact)
+            : prixActuel * (1 - impact);
     }
 }
