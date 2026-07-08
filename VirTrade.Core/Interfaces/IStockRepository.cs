@@ -6,4 +6,5 @@ public interface IStockRepository
 {
     Task<List<Stock>> GetAllAsync();
     Task UpdatePrixAsync(int stockId, decimal nouveauPrix);
+    Task EnregistrerHistoriqueAsync(int stockId, decimal prix);
 }

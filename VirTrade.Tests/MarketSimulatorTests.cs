@@ -6,11 +6,11 @@ using Xunit;
 namespace VirTrade.Tests;
 
 // Faux repository, utilisé uniquement pour les tests.
-// Pas besoin de vraie base de données pour tester GenererPrix().
 public class FakeStockRepository : IStockRepository
 {
     public Task<List<Stock>> GetAllAsync() => Task.FromResult(new List<Stock>());
     public Task UpdatePrixAsync(int stockId, decimal nouveauPrix) => Task.CompletedTask;
+    public Task EnregistrerHistoriqueAsync(int stockId, decimal prix) => Task.CompletedTask;
 }
 
 public class MarketSimulatorTests
@@ -18,15 +18,12 @@ public class MarketSimulatorTests
     [Fact]
     public void GenererPrix_ProduitDesVariationsRealistes()
     {
-        // Arrange
         var sim = new MarketSimulator(new FakeStockRepository());
         decimal prixActuel = 150.00m;
         decimal volatilite = 0.015m;
 
-        // Act
         decimal nouveauPrix = sim.GenererPrix(prixActuel, volatilite);
 
-        // Assert
         Assert.True(nouveauPrix > 0, "Le prix doit toujours être positif");
         decimal variation = Math.Abs(nouveauPrix - prixActuel) / prixActuel;
         Assert.True(variation < 0.05m, $"Variation trop grande : {variation:P2}");

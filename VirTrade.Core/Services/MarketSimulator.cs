@@ -13,21 +13,22 @@ public class MarketSimulator : IMarketSimulator
         _stockRepository = stockRepository;
     }
 
-    public async Task DemarrerAsync(CancellationToken ct)
+   public async Task DemarrerAsync(CancellationToken ct)
+{
+    while (!ct.IsCancellationRequested)
     {
-        while (!ct.IsCancellationRequested)
+        var stocks = await _stockRepository.GetAllAsync();
+
+        foreach (var stock in stocks)
         {
-            var stocks = await _stockRepository.GetAllAsync();
-
-            foreach (var stock in stocks)
-            {
-                decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
-                await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
-            }
-
-            await Task.Delay(TickIntervalMs, ct);
+            decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
+            await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
+            await _stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
         }
+
+        await Task.Delay(TickIntervalMs, ct);
     }
+}
 
     public decimal GenererPrix(decimal prixActuel, decimal volatilite)
     {
