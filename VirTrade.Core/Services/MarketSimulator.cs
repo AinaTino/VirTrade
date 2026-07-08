@@ -6,29 +6,41 @@ namespace VirTrade.Core.Services;
 public class MarketSimulator : IMarketSimulator
 {
     private readonly IStockRepository _stockRepository;
+    private readonly IMatchingEngine _matchingEngine;
     private const int TickIntervalMs = 3000; // valeur par défaut, viendra de ConfigMarche plus tard
 
-    public MarketSimulator(IStockRepository stockRepository)
+    public MarketSimulator(IStockRepository stockRepository, IMatchingEngine matchingEngine)
     {
         _stockRepository = stockRepository;
+        _matchingEngine = matchingEngine;
     }
 
-   public async Task DemarrerAsync(CancellationToken ct)
-{
-    while (!ct.IsCancellationRequested)
+    public async Task DemarrerAsync(CancellationToken ct)
     {
-        var stocks = await _stockRepository.GetAllAsync();
-
-        foreach (var stock in stocks)
+        while (!ct.IsCancellationRequested)
         {
-            decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
-            await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
-            await _stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
-        }
+            var stocks = await _stockRepository.GetAllAsync();
 
-        await Task.Delay(TickIntervalMs, ct);
+            foreach (var stock in stocks)
+            {
+                decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
+                await _stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
+                await _stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
+
+                // Ordre "déclencheur" léger - jamais persisté, sert juste de contexte
+                // pour que le MatchingEngine sache quel book vérifier (Stock + Symbole)
+                stock.PrixActuel = nouveauPrix;
+                var ordreDeclencheur = new Ordre
+                {
+                    Stock = stock,
+                    StockId = stock.Id
+                };
+                await _matchingEngine.ExecuterAsync(ordreDeclencheur);
+            }
+
+            await Task.Delay(TickIntervalMs, ct);
+        }
     }
-}
 
     public decimal GenererPrix(decimal prixActuel, decimal volatilite)
     {

@@ -15,6 +15,7 @@ builder.Services.AddControllers()
 // TEMPORAIRE - Membre 3 : à remplacer par le vrai StockRepository (Membre 2 / AppDbContext)
 builder.Services.AddSingleton<IStockRepository, FakeStockRepository>();
 builder.Services.AddSingleton<IMarketSimulator, MarketSimulator>();
+builder.Services.AddSingleton<IMatchingEngine, FakeMatchingEngine>();
 builder.Services.AddHostedService<MarketSimulatorHostedService>();
 
 var app = builder.Build();

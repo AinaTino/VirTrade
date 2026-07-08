@@ -5,7 +5,6 @@ using Xunit;
 
 namespace VirTrade.Tests;
 
-// Faux repository, utilisé uniquement pour les tests.
 public class FakeStockRepository : IStockRepository
 {
     public Task<List<Stock>> GetAllAsync() => Task.FromResult(new List<Stock>());
@@ -13,12 +12,18 @@ public class FakeStockRepository : IStockRepository
     public Task EnregistrerHistoriqueAsync(int stockId, decimal prix) => Task.CompletedTask;
 }
 
+public class FakeMatchingEngine : IMatchingEngine
+{
+    public Task<List<Trade>> ExecuterAsync(Ordre nouvelOrdre)
+        => Task.FromResult(new List<Trade>());
+}
+
 public class MarketSimulatorTests
 {
     [Fact]
     public void GenererPrix_ProduitDesVariationsRealistes()
     {
-        var sim = new MarketSimulator(new FakeStockRepository());
+        var sim = new MarketSimulator(new FakeStockRepository(), new FakeMatchingEngine());
         decimal prixActuel = 150.00m;
         decimal volatilite = 0.015m;
 
@@ -32,7 +37,7 @@ public class MarketSimulatorTests
     [Fact]
     public void GenererPrix_AfficheDixTicksPourInspectionVisuelle()
     {
-        var sim = new MarketSimulator(new FakeStockRepository());
+        var sim = new MarketSimulator(new FakeStockRepository(), new FakeMatchingEngine());
         decimal prix = 150.00m;
 
         for (int i = 0; i < 10; i++)
