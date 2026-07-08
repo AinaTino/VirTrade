@@ -44,4 +44,17 @@ public class Ordre
 
     public ICollection<Trade> BuyTrades { get; set; } = new List<Trade>();
     public ICollection<Trade> SellTrades { get; set; } = new List<Trade>();
+    
+    public int QuantiteRestante() => Quantite - QuantiteExecutee;
+
+    public bool EstExpire() =>
+        ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
+
+    public bool EstExecutable(decimal prixMarche) => TypeOrdre switch
+    {
+        TypeOrdre.Market => true,
+        TypeOrdre.Limit when SensOrdre == SensOrdre.Buy  => prixMarche <= PrixLimite!.Value,
+        TypeOrdre.Limit when SensOrdre == SensOrdre.Sell => prixMarche >= PrixLimite!.Value,
+        _ => false
+    };
 }
