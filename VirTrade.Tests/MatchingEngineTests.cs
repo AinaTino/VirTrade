@@ -149,15 +149,18 @@ public class MatchingEngineTests
     {
         var ask = CreerOrdre(SensOrdre.Sell, TypeOrdre.Limit, 150m, quantite: 100, id: 1);
         _book.Inject(ask);
-
+    
         var bid1 = CreerOrdre(SensOrdre.Buy, TypeOrdre.Limit, 150m, quantite: 60, id: 2);
-        var bid2 = CreerOrdre(SensOrdre.Buy, TypeOrdre.Limit, 150m, quantite: 40, id: 3);
         _book.Inject(bid1);
-        _book.Inject(bid2);
-
+    
         await _engine.ExecuterAsync(bid1);
+    
+        // bid2 injecté seulement après que bid1 soit traité
+        var bid2 = CreerOrdre(SensOrdre.Buy, TypeOrdre.Limit, 150m, quantite: 40, id: 3);
+        _book.Inject(bid2);
+    
         var trades2 = await _engine.ExecuterAsync(bid2);
-
+    
         ask.Statut.Should().Be(StatutOrdre.Filled);
         ask.QuantiteExecutee.Should().Be(100);
         trades2[0].Quantite.Should().Be(40);

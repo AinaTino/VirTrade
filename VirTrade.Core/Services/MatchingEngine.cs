@@ -58,7 +58,7 @@ public class MatchingEngine(
             await repository.PersisterTradeAsync(trade, bid, ask, qteMatch, prixExecution);
 
             // Appliquer le market impact sur le prix du stock
-            var nouveauPrix = AppliquerMarketImpact(prixExecution, qteMatch, bid.SensOrdre);
+            var nouveauPrix = AppliquerMarketImpact(prixExecution, qteMatch, nouvelOrdre.SensOrdre);
             nouvelOrdre.Stock.PrixActuel = nouveauPrix;
 
             tradesExecutes.Add(trade);
