@@ -21,6 +21,9 @@ public class MarketSimulator : IMarketSimulator
             using (var scope = _scopeFactory.CreateScope())
             {
                 var stockRepository = scope.ServiceProvider.GetRequiredService<IStockRepository>();
+                var matchingEngine = scope.ServiceProvider.GetRequiredService<IMatchingEngine>();
+                var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+
                 var stocks = await stockRepository.GetAllAsync();
 
                 foreach (var stock in stocks)
@@ -28,6 +31,16 @@ public class MarketSimulator : IMarketSimulator
                     decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
                     await stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
                     await stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
+
+                    // Vérifie si des Limit Orders se déclenchent suite au nouveau prix
+                    await matchingEngine.VerifierLimitOrdersAsync(stock.Symbole, nouveauPrix);
+                }
+
+                // Expiration des ordres périmés (section 14 du document)
+                var ordresExpires = await orderRepository.GetOrdresExpiresAsync();
+                if (ordresExpires.Count > 0)
+                {
+                    await orderRepository.AnnulerOrdresAsync(ordresExpires);
                 }
             }
 
