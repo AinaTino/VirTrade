@@ -40,7 +40,7 @@ public class Ordre
     [Required]
     public int StockId { get; set; }
 
-    public Stock Stock { get; set; }
+    public Stock? Stock { get; set; }
 
     public ICollection<Trade> BuyTrades { get; set; } = new List<Trade>();
     public ICollection<Trade> SellTrades { get; set; } = new List<Trade>();
