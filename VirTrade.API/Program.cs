@@ -3,17 +3,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using VirTrade.API;
 using VirTrade.API.Middlewares;
 using VirTrade.Core.Interfaces;
-using VirTrade.Infrastructure.Notifications;
-using VirTrade.Infrastructure.Persistence;
 using VirTrade.Core.Services;
+using VirTrade.Infrastructure.Notifications;
+using VirTrade.Infrastructure.Persistence.Repositories;
+using VirTrade.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // === Services ===
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // Swagger avec support JWT
 builder.Services.AddEndpointsApiExplorer();
@@ -100,11 +107,16 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // TODO : décommenter une fois Membre 1 livré IOrderRepository + IMatchingRepository
- //builder.Services.AddScoped<IOrderBookService, OrderBookService>();
- //builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IMatchingRepository, MatchingRepository>();
+builder.Services.AddScoped<IOrderBookService, OrderBookService>();
+builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
 
-// TODO : décommenter une fois Membre 3 terminé MarketSimulator
-// builder.Services.AddHostedService<MarketSimulator>();
+
+// === Membre 3 : MarketSimulator (TEMPORAIRE en attendant AppDbContext branché) ===
+builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddSingleton<IMarketSimulator, MarketSimulator>();
+builder.Services.AddHostedService<MarketSimulatorHostedService>();
 
 var app = builder.Build();
 
@@ -120,7 +132,6 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();

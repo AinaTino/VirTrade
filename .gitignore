@@ -8,9 +8,9 @@ riderModule.iml
 *.user
 *.suo
 .vs/
-bourse.db           ← base SQLite locale, jamais commitée
-bourse.db-shm
-bourse.db-wal
+*.db
+*.db-shm
+*.db-wal
 
 # Secrets
 appsettings.*.json  ← sauf appsettings.json de base sans secrets
