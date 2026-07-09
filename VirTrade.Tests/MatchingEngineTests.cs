@@ -18,8 +18,8 @@ public class MatchingEngineTests
     public MatchingEngineTests()
     {
         var orderRepoMock = new Mock<IOrderRepository>();
-        orderRepoMock.Setup(r => r.GetOrdresOuvertsAsync()).ReturnsAsync([]);
-        orderRepoMock.Setup(r => r.GetOrdresExpiresAsync()).ReturnsAsync([]);
+        orderRepoMock.Setup(r => r.GetOrdresOuvertsAsync()).ReturnsAsync(new List<Ordre>());
+        orderRepoMock.Setup(r => r.GetOrdresExpiresAsync()).ReturnsAsync(new List<Ordre>());
 
         _repoMock
             .Setup(r => r.PersisterTradeAsync(
@@ -329,7 +329,7 @@ public class MatchingEngineTests
             .ReturnsAsync(ordresOuverts);
         orderRepoMock
             .Setup(r => r.GetOrdresExpiresAsync())
-            .ReturnsAsync([]);
+            .ReturnsAsync(new List<Ordre>());
 
         var service = new OrderBookService(orderRepoMock.Object);
         await service.InitialiserAsync();
