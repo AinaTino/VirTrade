@@ -30,7 +30,7 @@ public class OrdersController(
 
         // Validation fonds / position (diagramme séquence : API → VAL → DB)
         var erreur = await ordresRepository.ValiderFondsAsync(
-            userId, request.SensOrdre, request.Quantite, stock.PrixActuel);
+            userId, request.SensOrdre, request.Quantite, stock.PrixActuel, stock.Id);
         if (erreur != null)
             return BadRequest(erreur);
 
