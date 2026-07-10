@@ -8,7 +8,6 @@ using VirTrade.API.Middlewares;
 using VirTrade.Core.Interfaces;
 using VirTrade.Core.Services;
 using VirTrade.Infrastructure.Notifications;
-using VirTrade.Infrastructure.Persistence.Repositories;
 using VirTrade.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);

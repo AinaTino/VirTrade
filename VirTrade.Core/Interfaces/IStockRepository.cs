@@ -5,8 +5,12 @@ namespace VirTrade.Core.Interfaces;
 public interface IStockRepository
 {
     Task<List<Stock>> GetAllAsync();
+    Task<List<Stock>> GetAllForSimulatorAsync();
     Task UpdatePrixAsync(int stockId, decimal nouveauPrix);
     Task EnregistrerHistoriqueAsync(int stockId, decimal prix);
+    
+    /// <summary>Enregistre plusieurs historiques de prix en une seule transaction</summary>
+    Task EnregistrerHistoriquesAsync(List<HistoriquePrix> historiques);
 
     // Ajouts pour AdminController (J5)
     Task<Stock?> GetByIdAsync(int stockId);

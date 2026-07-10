@@ -16,6 +16,9 @@ public class MarketSimulator : IMarketSimulator
 
     public async Task DemarrerAsync(CancellationToken ct)
     {
+        // Délai initial pour permettre au serveur de démarrer correctement
+        await Task.Delay(2000, ct);
+        
         while (!ct.IsCancellationRequested)
         {
             using (var scope = _scopeFactory.CreateScope())
@@ -24,16 +27,41 @@ public class MarketSimulator : IMarketSimulator
                 var matchingEngine = scope.ServiceProvider.GetRequiredService<IMatchingEngine>();
                 var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
 
-                var stocks = await stockRepository.GetAllAsync();
+                var stocks = await stockRepository.GetAllForSimulatorAsync();
+
+                // Regroupe les mises à jour de prix et les historiques
+                var prixUpdates = new Dictionary<int, decimal>();
+                var historiquesPrix = new List<HistoriquePrix>();
 
                 foreach (var stock in stocks)
                 {
                     decimal nouveauPrix = GenererPrix(stock.PrixActuel, stock.Volatilite);
-                    await stockRepository.UpdatePrixAsync(stock.Id, nouveauPrix);
-                    await stockRepository.EnregistrerHistoriqueAsync(stock.Id, nouveauPrix);
+                    prixUpdates[stock.Id] = nouveauPrix;
+                    
+                    historiquesPrix.Add(new HistoriquePrix
+                    {
+                        Open = nouveauPrix,
+                        High = nouveauPrix,
+                        Low = nouveauPrix,
+                        Close = nouveauPrix,
+                        Volume = 0,
+                        Timestamp = DateTime.UtcNow,
+                        StockId = stock.Id
+                    });
 
-                    // Vérifie si des Limit Orders se déclenchent suite au nouveau prix
                     await matchingEngine.VerifierLimitOrdersAsync(stock.Symbole, nouveauPrix);
+                }
+
+                // Mises à jour en batch (ExecuteUpdateAsync)
+                foreach (var (stockId, nouveauPrix) in prixUpdates)
+                {
+                    await stockRepository.UpdatePrixAsync(stockId, nouveauPrix);
+                }
+
+                // Historiques en batch
+                if (historiquesPrix.Count > 0)
+                {
+                    await stockRepository.EnregistrerHistoriquesAsync(historiquesPrix);
                 }
 
                 // Expiration des ordres périmés (section 14 du document)
