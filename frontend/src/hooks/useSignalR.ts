@@ -45,10 +45,11 @@ class HubProxy {
 
     // Create a start promise so concurrent callers wait for the same attempt
     this.startPromise = (async () => {
+      const wsBaseUrl = (import.meta.env.VITE_WS_URL || 'http://localhost:5169') + '/hubs/bourse'
       const conn = new signalR.HubConnectionBuilder()
-        .withUrl((import.meta.env.VITE_WS_URL || window.location.origin) + '/hubs/bourse', {
+        .withUrl(wsBaseUrl, {
           accessTokenFactory: () => localStorage.getItem('virtrade_jwt') ?? '',
-          transport: signalR.HttpTransportType.LongPolling,
+          transport: signalR.HttpTransportType.WebSockets,
         })
         .withAutomaticReconnect()
         .build()

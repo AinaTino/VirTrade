@@ -5,8 +5,10 @@ using VirTrade.Core.Interfaces;
 
 namespace VirTrade.Infrastructure.Persistence;
 
-public class MatchingRepository(AppDbContext db) : IMatchingRepository
+public class MatchingRepository(AppDbContext db, ISignalRNotifier notifier) : IMatchingRepository
 {
+    private readonly ISignalRNotifier _notifier = notifier;
+
     public async Task PersisterTradeAsync(
         Trade trade, Ordre bid, Ordre ask, int qteMatch, decimal prixExecution)
     {
@@ -14,23 +16,38 @@ public class MatchingRepository(AppDbContext db) : IMatchingRepository
 
         try
         {
+            var bidTracke = await db.Ordres
+                .FirstAsync(o => o.Id == bid.Id);
+            var askTracke = await db.Ordres
+                .FirstAsync(o => o.Id == ask.Id);
+            var stockTracke = await db.Stocks
+                .FirstAsync(s => s.Id == bid.StockId);
+
+            bidTracke.QuantiteExecutee = bid.QuantiteExecutee;
+            bidTracke.Statut = bid.Statut;
+            askTracke.QuantiteExecutee = ask.QuantiteExecutee;
+            askTracke.Statut = ask.Statut;
+
+            trade.BuyOrder = bidTracke;
+            trade.SellOrder = askTracke;
+            trade.Stock = stockTracke;
+
             // 1. INSERT trade
             db.Trades.Add(trade);
 
-            // 2. UPDATE bid + ask (déjà trackés par EF via OrderBookService)
-            db.Ordres.Update(bid);
-            db.Ordres.Update(ask);
+            var portefeuilleAcheteurId = await ObtenirPortefeuilleIdAsync(bid.UtilisateurId);
+            var portefeuilleVendeurId = await ObtenirPortefeuilleIdAsync(ask.UtilisateurId);
 
             // 3. UPDATE position acheteur
             var positionAcheteur = await db.Positions
-                .FirstOrDefaultAsync(p => p.PortefeuilleId == bid.UtilisateurId
+                .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleAcheteurId
                                        && p.StockId == bid.StockId);
 
             if (positionAcheteur == null)
             {
                 positionAcheteur = new Position
                 {
-                    PortefeuilleId  = await ObtenirPortefeuilleIdAsync(bid.UtilisateurId),
+                    PortefeuilleId  = portefeuilleAcheteurId,
                     StockId         = bid.StockId,
                     QuantiteDetenue = 0,
                     PrixMoyenAchat  = 0
@@ -42,7 +59,7 @@ public class MatchingRepository(AppDbContext db) : IMatchingRepository
 
             // 4. UPDATE position vendeur
             var positionVendeur = await db.Positions
-                .FirstOrDefaultAsync(p => p.PortefeuilleId == ask.UtilisateurId
+                .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleVendeurId
                                        && p.StockId == ask.StockId);
 
             if (positionVendeur != null)
@@ -63,9 +80,7 @@ public class MatchingRepository(AppDbContext db) : IMatchingRepository
                 portefeuilleVendeur.SoldeCash += qteMatch * prixExecution;
 
             // 7. UPDATE stock.PrixActuel
-            var stock = await db.Stocks.FindAsync(bid.StockId);
-            if (stock != null)
-                stock.PrixActuel = prixExecution;
+            stockTracke.PrixActuel = prixExecution;
 
             // 8. INSERT/UPDATE HistoriquePrix OHLC (période = minute courante)
             await PersisterOhlcAsync(bid.StockId, prixExecution, qteMatch);
@@ -78,6 +93,58 @@ public class MatchingRepository(AppDbContext db) : IMatchingRepository
             await transaction.RollbackAsync();
             throw;
         }
+
+        await NotifierPortefeuilleAsync(bid.UtilisateurId);
+        if (ask.UtilisateurId != bid.UtilisateurId)
+            await NotifierPortefeuilleAsync(ask.UtilisateurId);
+    }
+
+    private async Task NotifierPortefeuilleAsync(int utilisateurId)
+    {
+        var portefeuille = await db.Portefeuilles
+            .AsNoTracking()
+            .Include(p => p.Positions)
+                .ThenInclude(pos => pos.Stock)
+            .FirstOrDefaultAsync(p => p.UtilisateurId == utilisateurId);
+
+        if (portefeuille == null)
+            return;
+
+        var configCapital = await db.ConfigsMarche
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Cle == "capital_initial");
+
+        decimal capitalInitial = configCapital != null
+            ? decimal.Parse(configCapital.Valeur)
+            : 100000m;
+
+        var valeurPositions = portefeuille.Positions
+            .Sum(pos => pos.QuantiteDetenue * pos.Stock.PrixActuel);
+
+        var valeurTotale = portefeuille.SoldeCash + valeurPositions;
+        var pnl = valeurTotale - capitalInitial;
+        var pnlPourcentage = capitalInitial == 0 ? 0 : Math.Round((pnl / capitalInitial) * 100, 2);
+
+        await _notifier.NotifierPortefeuilleAsync(utilisateurId, new
+        {
+            soldeCash = portefeuille.SoldeCash,
+            valeurPositions,
+            valeurTotale,
+            capitalInitial,
+            pnl,
+            pnlPourcentage,
+            positions = portefeuille.Positions.Select(pos => new
+            {
+                stockId = pos.StockId,
+                symbole = pos.Stock.Symbole,
+                nomComplet = pos.Stock.NomComplet,
+                quantiteDetenue = pos.QuantiteDetenue,
+                prixMoyenAchat = pos.PrixMoyenAchat,
+                prixActuel = pos.Stock.PrixActuel,
+                valeur = pos.QuantiteDetenue * pos.Stock.PrixActuel,
+                pnlPosition = (pos.Stock.PrixActuel - pos.PrixMoyenAchat) * pos.QuantiteDetenue
+            })
+        });
     }
 
     private async Task<int> ObtenirPortefeuilleIdAsync(int utilisateurId)

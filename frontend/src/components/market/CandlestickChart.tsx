@@ -62,7 +62,8 @@ export function CandlestickChart({ symbole }: { symbole: string }) {
       }
     }
     void refresh()
-    const interval = window.setInterval(() => void refresh(), 3000)
+    // Augmenté de 3000ms à 10000ms (10s) — polling fallback, SignalR pour mises à jour temps réel
+    const interval = window.setInterval(() => void refresh(), 10000)
     return () => {
       active = false
       window.clearInterval(interval)

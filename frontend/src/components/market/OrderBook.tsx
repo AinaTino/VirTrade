@@ -1,8 +1,15 @@
+import { useEffect } from 'react'
 import { useOrderBook } from '../../hooks/useOrderBook'
 import { formatNombre } from '../../lib/format'
 
-export function OrderBook({ symbole }: { symbole: string }) {
-  const { orderBook, loading, error } = useOrderBook(symbole)
+export function OrderBook({ symbole, refreshKey }: { symbole: string; refreshKey?: number }) {
+  const { orderBook, loading, error, refresh } = useOrderBook(symbole)
+
+  useEffect(() => {
+    if (refreshKey != null) {
+      void refresh()
+    }
+  }, [refresh, refreshKey])
 
   if (loading) {
     return (

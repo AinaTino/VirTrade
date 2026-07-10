@@ -26,6 +26,7 @@ namespace VirTrade.API.Controllers
             if (userId == null) return Unauthorized();
 
             var portefeuille = await _db.Portefeuilles
+                .AsNoTracking()
                 .Include(p => p.Positions)
                     .ThenInclude(pos => pos.Stock)
                 .FirstOrDefaultAsync(p => p.UtilisateurId == userId);
@@ -33,11 +34,22 @@ namespace VirTrade.API.Controllers
             if (portefeuille == null)
                 return NotFound(new { message = "Portefeuille introuvable" });
 
+            // Capital initial depuis ConfigMarche (section 14)
+            var configCapital = await _db.ConfigsMarche
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Cle == "capital_initial");
+
+            decimal capitalInitial = configCapital != null
+                ? decimal.Parse(configCapital.Valeur)
+                : 100000m;
+
             // Valeur totale = solde cash + valeur des positions
             var valeurPositions = portefeuille.Positions
                 .Sum(pos => pos.QuantiteDetenue * pos.Stock.PrixActuel);
 
             var valeurTotale = portefeuille.SoldeCash + valeurPositions;
+            var pnl = valeurTotale - capitalInitial;
+            var pnlPourcentage = (pnl / capitalInitial) * 100;
 
             return Ok(new
             {
@@ -45,6 +57,9 @@ namespace VirTrade.API.Controllers
                 soldeCash = portefeuille.SoldeCash,
                 valeurPositions,
                 valeurTotale,
+                capitalInitial,
+                pnl,
+                pnlPourcentage = Math.Round(pnlPourcentage, 2),
                 createdAt = portefeuille.CreatedAt,
                 positions = portefeuille.Positions.Select(pos => new
                 {
@@ -54,7 +69,8 @@ namespace VirTrade.API.Controllers
                     quantiteDetenue = pos.QuantiteDetenue,
                     prixMoyenAchat = pos.PrixMoyenAchat,
                     prixActuel = pos.Stock.PrixActuel,
-                    valeur = pos.QuantiteDetenue * pos.Stock.PrixActuel
+                    valeur = pos.QuantiteDetenue * pos.Stock.PrixActuel,
+                    pnlPosition = (pos.Stock.PrixActuel - pos.PrixMoyenAchat) * pos.QuantiteDetenue
                 })
             });
         }
@@ -67,12 +83,14 @@ namespace VirTrade.API.Controllers
             if (userId == null) return Unauthorized();
 
             var portefeuille = await _db.Portefeuilles
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.UtilisateurId == userId);
 
             if (portefeuille == null)
                 return NotFound(new { message = "Portefeuille introuvable" });
 
             var positions = await _db.Positions
+                .AsNoTracking()
                 .Include(p => p.Stock)
                 .Where(p => p.PortefeuilleId == portefeuille.Id
                          && p.QuantiteDetenue > 0)
@@ -87,9 +105,7 @@ namespace VirTrade.API.Controllers
                 prixMoyenAchat = pos.PrixMoyenAchat,
                 prixActuel = pos.Stock.PrixActuel,
                 valeur = pos.QuantiteDetenue * pos.Stock.PrixActuel,
-                // PnL par position — section 1.5 du document
-                pnlPosition = (pos.Stock.PrixActuel - pos.PrixMoyenAchat)
-                              * pos.QuantiteDetenue
+                pnlPosition = (pos.Stock.PrixActuel - pos.PrixMoyenAchat) * pos.QuantiteDetenue
             }));
         }
 
@@ -101,6 +117,7 @@ namespace VirTrade.API.Controllers
             if (userId == null) return Unauthorized();
 
             var trades = await _db.Trades
+                .AsNoTracking()
                 .Include(t => t.Stock)
                 .Include(t => t.BuyOrder)
                 .Include(t => t.SellOrder)
@@ -128,6 +145,7 @@ namespace VirTrade.API.Controllers
             if (userId == null) return Unauthorized();
 
             var portefeuille = await _db.Portefeuilles
+                .AsNoTracking()
                 .Include(p => p.Positions)
                     .ThenInclude(pos => pos.Stock)
                 .FirstOrDefaultAsync(p => p.UtilisateurId == userId);
@@ -137,6 +155,7 @@ namespace VirTrade.API.Controllers
 
             // Capital initial depuis ConfigMarche (section 14)
             var configCapital = await _db.ConfigsMarche
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Cle == "capital_initial");
 
             decimal capitalInitial = configCapital != null

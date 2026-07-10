@@ -46,7 +46,9 @@ export function TradingPage() {
       }
     }
     void refresh()
-    const interval = window.setInterval(() => void refresh(), 3000)
+    // Augmenté de 3000ms à 10000ms (10s) pour réduire la charge
+    // SignalR handle les mises à jour temps réel, polling est fallback seulement
+    const interval = window.setInterval(() => void refresh(), 10000)
     return () => {
       active = false
       window.clearInterval(interval)
@@ -83,6 +85,8 @@ export function TradingPage() {
       </AppShell>
     )
   }
+
+  const [orderBookRefreshToken, setOrderBookRefreshToken] = useState(0)
 
   return (
     <AppShell>
@@ -127,10 +131,10 @@ export function TradingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
             <div className="space-y-4">
               <CandlestickChart symbole={stock.symbole} />
-              <OrderBook symbole={stock.symbole} />
+              <OrderBook symbole={stock.symbole} refreshKey={orderBookRefreshToken} />
             </div>
             <div>
-              <OrderForm stock={stock} />
+              <OrderForm stock={stock} onOrdrePasse={() => setOrderBookRefreshToken((current) => current + 1)} />
             </div>
           </div>
         </>

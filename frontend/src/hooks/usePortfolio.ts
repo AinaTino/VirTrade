@@ -8,11 +8,18 @@ export function usePortfolio() {
   const [portefeuille, setPortefeuille] = useState<Portefeuille | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    getPortefeuille().then((p) => {
+  const refresh = async () => {
+    setLoading(true)
+    try {
+      const p = await getPortefeuille()
       setPortefeuille(p)
+    } finally {
       setLoading(false)
-    })
+    }
+  }
+
+  useEffect(() => {
+    void refresh()
   }, [])
 
   useEffect(() => {
@@ -21,5 +28,5 @@ export function usePortfolio() {
     return () => connection.off('PortefeuilleUpdate', onUpdate)
   }, [connection])
 
-  return { portefeuille, loading }
+  return { portefeuille, loading, refresh }
 }

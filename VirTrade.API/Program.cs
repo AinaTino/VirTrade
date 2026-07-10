@@ -109,7 +109,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
 builder.Services.AddScoped<IMatchingRepository, MatchingRepository>();
-builder.Services.AddScoped<IOrderBookService, OrderBookService>();
+builder.Services.AddSingleton<IOrderBookService>(provider =>
+    new OrderBookService(provider.GetRequiredService<IServiceScopeFactory>()));
 builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
 
 
@@ -141,5 +142,7 @@ app.MapControllers();
 
 // Hub SignalR (section 11 + section 15.11)
 app.MapHub<BourseHub>("/hubs/bourse");
+
+await app.Services.GetRequiredService<IOrderBookService>().InitialiserAsync();
 
 app.Run();

@@ -13,7 +13,8 @@ namespace VirTrade.API.Controllers;
 public class OrdersController(
     IOrderBookService orderBookService,
     IMatchingEngine matchingEngine,
-    IOrdersRepository ordresRepository) : ControllerBase
+    IOrdersRepository ordresRepository,
+    ISignalRNotifier notifier) : ControllerBase
 {
     // POST /api/orders
     [HttpPost]
@@ -60,10 +61,24 @@ public class OrdersController(
         // Tenter le matching
         var trades = await matchingEngine.ExecuterAsync(ordre);
 
+        if (trades.Count == 0)
+        {
+            var book = orderBookService.GetBook(ordre.Stock.Symbole);
+            await notifier.NotifierOrderBookAsync(ordre.Stock.Symbole, new
+            {
+                symbole = ordre.Stock.Symbole,
+                bids = book.GetBids(),
+                asks = book.GetAsks(),
+                spread = book.Spread(),
+                timestamp = DateTime.UtcNow
+            });
+        }
+
         return CreatedAtAction(nameof(GetOrdre), new { id = ordre.Id }, new
         {
             ordre.Id,
             ordre.Statut,
+            ordre.QuantiteExecutee,
             TradesExecutes = trades.Count
         });
     }

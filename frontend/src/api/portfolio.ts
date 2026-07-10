@@ -2,14 +2,15 @@ import { apiClient } from './client'
 import type { Portefeuille, Position } from '../types'
 
 export async function getPortefeuille(): Promise<Portefeuille> {
-  const [{ data: portefeuille }, { data: pnl }] = await Promise.all([apiClient.get('/portfolio'), apiClient.get('/portfolio/pnl')])
+  // Optimisation : Récupère tout en une seule requête (portfolio + pnl combinés)
+  const { data } = await apiClient.get('/portfolio')
   return {
-    soldeCash: portefeuille.soldeCash,
-    valeurTotale: portefeuille.valeurTotale,
-    capitalInitial: pnl.capitalInitial,
-    pnl: pnl.pnl,
-    pnlPct: pnl.pnlPourcentage,
-    positions: portefeuille.positions.map((position: any) => ({
+    soldeCash: data.soldeCash,
+    valeurTotale: data.valeurTotale,
+    capitalInitial: data.capitalInitial,
+    pnl: data.pnl,
+    pnlPct: data.pnlPourcentage,
+    positions: data.positions.map((position: any) => ({
       ...position,
       valeurMarche: position.valeur,
       pnl: position.pnlPosition ?? 0,

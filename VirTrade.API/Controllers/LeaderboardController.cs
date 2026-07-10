@@ -22,15 +22,17 @@ namespace VirTrade.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLeaderboard()
         {
+            // Optimisation : Charger seulement les données nécessaires avec projections
             var stocks = await _db.Stocks.ToListAsync();
 
             var portefeuilles = await _db.Portefeuilles
                 .Include(p => p.Utilisateur)
                 .Include(p => p.Positions)
                     .ThenInclude(pos => pos.Stock)
+                .AsNoTracking()  // Pas besoin de tracker les entités, juste les lire
                 .ToListAsync();
 
-            // Classement par valeur totale décroissante (section 8.2 — LeaderboardController)
+            // Calcul efficace en mémoire : les données sont déjà chargées, pas de requête supplémentaire
             var classement = portefeuilles
                 .Select(p => new
                 {
@@ -68,6 +70,7 @@ namespace VirTrade.API.Controllers
                 .Include(p => p.Utilisateur)
                 .Include(p => p.Positions)
                     .ThenInclude(pos => pos.Stock)
+                .AsNoTracking()
                 .ToListAsync();
 
             // Classement complet pour trouver le rang

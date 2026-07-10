@@ -1,20 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSignalR } from './useSignalR'
 import { getOrderBook } from '../api/stocks'
 import type { OrderBookSnapshot } from '../types'
 
 type ApiOrder = {
+  prix?: number | null
+  Prix?: number | null
   prixLimite?: number | null
+  PrixLimite?: number | null
   quantite?: number
+  Quantite?: number
   quantiteExecutee?: number
+  QuantiteExecutee?: number
 }
 
 function aggregateLevels(orders: ApiOrder[] = []) {
   const levels = new Map<number, number>()
   for (const order of orders) {
-    if (order.prixLimite == null || !Number.isFinite(order.prixLimite)) continue
-    const remaining = (order.quantite ?? 0) - (order.quantiteExecutee ?? 0)
-    if (remaining > 0) levels.set(order.prixLimite, (levels.get(order.prixLimite) ?? 0) + remaining)
+    const prix = order.prix ?? order.Prix ?? order.prixLimite ?? order.PrixLimite
+    if (prix == null || !Number.isFinite(prix)) continue
+    const quantite = order.quantite ?? order.Quantite ?? 0
+    const quantiteExecutee = order.quantiteExecutee ?? order.QuantiteExecutee ?? 0
+    const remaining = quantite - quantiteExecutee
+    if (remaining > 0) levels.set(prix, (levels.get(prix) ?? 0) + remaining)
   }
   return [...levels].map(([prix, quantite]) => ({ prix, quantite }))
 }
@@ -24,19 +32,30 @@ function normalizeUpdate(symbole: string, payload: unknown): OrderBookSnapshot |
     symbole?: string
     bids?: ApiOrder[]
     asks?: ApiOrder[]
+    Bids?: ApiOrder[]
+    Asks?: ApiOrder[]
     spread?: number
+    Spread?: number
     timestamp?: string
+    Timestamp?: string
   }
-  if (!data || (!Array.isArray(data.bids) && !Array.isArray(data.asks))) return null
 
-  const bids = aggregateLevels(data.bids).sort((a, b) => b.prix - a.prix)
-  const asks = aggregateLevels(data.asks).sort((a, b) => a.prix - b.prix)
+  const bidsData = Array.isArray(data.bids) ? data.bids : Array.isArray(data.Bids) ? data.Bids : undefined
+  const asksData = Array.isArray(data.asks) ? data.asks : Array.isArray(data.Asks) ? data.Asks : undefined
+
+  if (!bidsData && !asksData) return null
+
+  const bids = aggregateLevels(bidsData).sort((a, b) => b.prix - a.prix)
+  const asks = aggregateLevels(asksData).sort((a, b) => a.prix - b.prix)
+
+  if (bids.length === 0 && asks.length === 0) return null
+
   return {
     symbole: data.symbole ?? symbole,
     bids,
     asks,
-    spread: data.spread ?? (bids[0] && asks[0] ? asks[0].prix - bids[0].prix : 0),
-    timestamp: data.timestamp ?? new Date().toISOString(),
+    spread: data.spread ?? data.Spread ?? (bids[0] && asks[0] ? asks[0].prix - bids[0].prix : 0),
+    timestamp: data.timestamp ?? data.Timestamp ?? new Date().toISOString(),
   }
 }
 
@@ -46,30 +65,24 @@ export function useOrderBook(symbole: string) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load initial orderbook from REST API (always works, falls back to local generator)
-  useEffect(() => {
-    let isMounted = true
+  const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
-    getOrderBook(symbole)
-      .then((snapshot) => {
-        if (isMounted) {
-          setOrderBook(snapshot)
-          setLoading(false)
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err?.response?.status === 404 ? 'Le snapshot du carnet n’est pas encore exposé par le backend.' : 'Impossible de charger le carnet.')
-          setLoading(false)
-        }
-      })
-    return () => {
-      isMounted = false
+
+    try {
+      const snapshot = await getOrderBook(symbole)
+      setOrderBook(snapshot)
+    } catch (err: any) {
+      setError(err?.response?.status === 404 ? 'Le snapshot du carnet n’est pas encore exposé par le backend.' : 'Impossible de charger le carnet.')
+    } finally {
+      setLoading(false)
     }
   }, [symbole])
 
-  // Listen for SignalR updates (opportunistically, no blocking)
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
   useEffect(() => {
     let isMounted = true
 
@@ -83,7 +96,6 @@ export function useOrderBook(symbole: string) {
     }
 
     try {
-      // attempt to subscribe if connection allows
       if (connection && typeof (connection as any).invoke === 'function') {
         ;(connection as any)
           .invoke('AbonnerStock', symbole)
@@ -109,5 +121,5 @@ export function useOrderBook(symbole: string) {
     }
   }, [connection, symbole])
 
-  return { orderBook, loading, error }
+  return { orderBook, loading, error, refresh }
 }

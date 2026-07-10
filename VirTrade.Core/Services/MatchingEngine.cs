@@ -67,7 +67,14 @@ public class MatchingEngine(
             await notifier.NotifierPrixUpdateAsync(nouvelOrdre.Stock.Symbole, nouveauPrix);
             await notifier.NotifierOrderBookAsync(
                 nouvelOrdre.Stock.Symbole,
-                new { Bids = book.GetBids(), Asks = book.GetAsks() }
+                new
+                {
+                    symbole = nouvelOrdre.Stock.Symbole,
+                    bids = book.GetBids(),
+                    asks = book.GetAsks(),
+                    spread = book.Spread(),
+                    timestamp = DateTime.UtcNow
+                }
             );
         }
 

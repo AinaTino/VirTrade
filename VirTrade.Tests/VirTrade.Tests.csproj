@@ -22,6 +22,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\VirTrade.Core\VirTrade.Core.csproj" />
+      <ProjectReference Include="..\VirTrade.API\VirTrade.API.csproj" />
     </ItemGroup>
 
 </Project>

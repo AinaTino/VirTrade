@@ -26,9 +26,9 @@ function messageErreurOrdre(error: unknown): string {
 }
 
 export function OrderForm({ stock, onOrdrePasse }: OrderFormProps) {
-  const { portefeuille } = usePortfolio()
+  const { portefeuille, refresh: refreshPortefeuille } = usePortfolio()
   const [sens, setSens] = useState<SensOrdre>('BUY')
-  const [type, setType] = useState<TypeOrdre>('MARKET')
+  const [type, setType] = useState<TypeOrdre>('LIMIT')
   const [quantite, setQuantite] = useState(10)
   const [prixLimite, setPrixLimite] = useState(stock.prixActuel)
   const [envoi, setEnvoi] = useState(false)
@@ -73,8 +73,11 @@ export function OrderForm({ stock, onOrdrePasse }: OrderFormProps) {
       setSucces(
         res.statut === 'FILLED'
           ? 'Ordre exécuté.'
+          : res.statut === 'PARTIAL'
+            ? `Ordre partiellement exécuté (${res.quantiteExecutee}/${quantite}) — reliquat dans le carnet`
           : 'Ordre placé — en attente dans le carnet'
       )
+      void refreshPortefeuille()
       onOrdrePasse?.()
     } catch (err) {
       setErreur(messageErreurOrdre(err))
