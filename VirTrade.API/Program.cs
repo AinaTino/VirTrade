@@ -106,7 +106,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // TODO : décommenter une fois Membre 1 livré IOrderRepository + IMatchingRepository
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
 builder.Services.AddScoped<IMatchingRepository, MatchingRepository>();
 builder.Services.AddScoped<IOrderBookService, OrderBookService>();
 builder.Services.AddScoped<IMatchingEngine, MatchingEngine>();
