@@ -27,3 +27,4 @@ frontend/.env       ← tokens, URLs d'API
 Thumbs.db
 
 .idea/
+.idea/*
