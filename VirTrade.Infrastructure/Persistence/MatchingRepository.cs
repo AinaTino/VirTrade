@@ -35,49 +35,95 @@ public class MatchingRepository(AppDbContext db, ISignalRNotifier notifier) : IM
             // 1. INSERT trade
             db.Trades.Add(trade);
 
-            var portefeuilleAcheteurId = await ObtenirPortefeuilleIdAsync(bid.UtilisateurId);
-            var portefeuilleVendeurId = await ObtenirPortefeuilleIdAsync(ask.UtilisateurId);
+            var isSingleSideExecution = bid.Id == ask.Id && bid.UtilisateurId == ask.UtilisateurId;
 
-            // 3. UPDATE position acheteur
-            var positionAcheteur = await db.Positions
-                .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleAcheteurId
-                                       && p.StockId == bid.StockId);
-
-            if (positionAcheteur == null)
+            if (!isSingleSideExecution)
             {
-                positionAcheteur = new Position
+                var portefeuilleAcheteurId = await ObtenirPortefeuilleIdAsync(bid.UtilisateurId);
+                var portefeuilleVendeurId = await ObtenirPortefeuilleIdAsync(ask.UtilisateurId);
+
+                // 3. UPDATE position acheteur
+                var positionAcheteur = await db.Positions
+                    .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleAcheteurId
+                                           && p.StockId == bid.StockId);
+
+                if (positionAcheteur == null)
                 {
-                    PortefeuilleId  = portefeuilleAcheteurId,
-                    StockId         = bid.StockId,
-                    QuantiteDetenue = 0,
-                    PrixMoyenAchat  = 0
-                };
-                db.Positions.Add(positionAcheteur);
+                    positionAcheteur = new Position
+                    {
+                        PortefeuilleId  = portefeuilleAcheteurId,
+                        StockId         = bid.StockId,
+                        QuantiteDetenue = 0,
+                        PrixMoyenAchat  = 0
+                    };
+                    db.Positions.Add(positionAcheteur);
+                }
+
+                positionAcheteur.MettreAJour(qteMatch, prixExecution);
+
+                // 4. UPDATE position vendeur
+                var positionVendeur = await db.Positions
+                    .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleVendeurId
+                                           && p.StockId == ask.StockId);
+
+                if (positionVendeur != null)
+                    positionVendeur.MettreAJour(-qteMatch, prixExecution);
+
+                // 5. UPDATE portefeuille acheteur → SoldeCash -= qte × prix
+                var portefeuilleAcheteur = await db.Portefeuilles
+                    .FirstOrDefaultAsync(p => p.UtilisateurId == bid.UtilisateurId);
+
+                if (portefeuilleAcheteur != null)
+                    portefeuilleAcheteur.SoldeCash -= qteMatch * prixExecution;
+
+                // 6. UPDATE portefeuille vendeur → SoldeCash += qte × prix
+                var portefeuilleVendeur = await db.Portefeuilles
+                    .FirstOrDefaultAsync(p => p.UtilisateurId == ask.UtilisateurId);
+
+                if (portefeuilleVendeur != null)
+                    portefeuilleVendeur.SoldeCash += qteMatch * prixExecution;
             }
+            else
+            {
+                var portefeuilleUtilisateur = await db.Portefeuilles
+                    .FirstOrDefaultAsync(p => p.UtilisateurId == bid.UtilisateurId);
 
-            positionAcheteur.MettreAJour(qteMatch, prixExecution);
+                if (portefeuilleUtilisateur == null)
+                    throw new InvalidOperationException($"Portefeuille introuvable pour l'utilisateur {bid.UtilisateurId}");
 
-            // 4. UPDATE position vendeur
-            var positionVendeur = await db.Positions
-                .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleVendeurId
-                                       && p.StockId == ask.StockId);
+                if (bid.SensOrdre == SensOrdre.Buy)
+                {
+                    var positionAcheteur = await db.Positions
+                        .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleUtilisateur.Id
+                                               && p.StockId == bid.StockId);
 
-            if (positionVendeur != null)
-                positionVendeur.MettreAJour(-qteMatch, prixExecution);
+                    if (positionAcheteur == null)
+                    {
+                        positionAcheteur = new Position
+                        {
+                            PortefeuilleId  = portefeuilleUtilisateur.Id,
+                            StockId         = bid.StockId,
+                            QuantiteDetenue = 0,
+                            PrixMoyenAchat  = 0
+                        };
+                        db.Positions.Add(positionAcheteur);
+                    }
 
-            // 5. UPDATE portefeuille acheteur → SoldeCash -= qte × prix
-            var portefeuilleAcheteur = await db.Portefeuilles
-                .FirstOrDefaultAsync(p => p.UtilisateurId == bid.UtilisateurId);
+                    positionAcheteur.MettreAJour(qteMatch, prixExecution);
+                    portefeuilleUtilisateur.SoldeCash -= qteMatch * prixExecution;
+                }
+                else
+                {
+                    var positionVendeur = await db.Positions
+                        .FirstOrDefaultAsync(p => p.PortefeuilleId == portefeuilleUtilisateur.Id
+                                               && p.StockId == bid.StockId);
 
-            if (portefeuilleAcheteur != null)
-                portefeuilleAcheteur.SoldeCash -= qteMatch * prixExecution;
+                    if (positionVendeur != null)
+                        positionVendeur.MettreAJour(-qteMatch, prixExecution);
 
-            // 6. UPDATE portefeuille vendeur → SoldeCash += qte × prix
-            var portefeuilleVendeur = await db.Portefeuilles
-                .FirstOrDefaultAsync(p => p.UtilisateurId == ask.UtilisateurId);
-
-            if (portefeuilleVendeur != null)
-                portefeuilleVendeur.SoldeCash += qteMatch * prixExecution;
+                    portefeuilleUtilisateur.SoldeCash += qteMatch * prixExecution;
+                }
+            }
 
             // 7. UPDATE stock.PrixActuel
             stockTracke.PrixActuel = prixExecution;

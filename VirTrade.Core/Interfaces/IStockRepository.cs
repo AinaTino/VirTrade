@@ -14,6 +14,7 @@ public interface IStockRepository
 
     // Ajouts pour AdminController (J5)
     Task<Stock?> GetByIdAsync(int stockId);
+    Task<List<HistoriquePrix>> GetHistoriqueAsync(string symbole, int limit = 240);
     Task<Stock> AddAsync(Stock stock);
     Task UpdateAsync(Stock stock);
     Task DeleteAsync(int stockId);

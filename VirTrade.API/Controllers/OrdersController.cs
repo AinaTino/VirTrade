@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using VirTrade.Core.Entities;
@@ -64,14 +64,7 @@ public class OrdersController(
         if (trades.Count == 0)
         {
             var book = orderBookService.GetBook(ordre.Stock.Symbole);
-            await notifier.NotifierOrderBookAsync(ordre.Stock.Symbole, new
-            {
-                symbole = ordre.Stock.Symbole,
-                bids = book.GetBids(),
-                asks = book.GetAsks(),
-                spread = book.Spread(),
-                timestamp = DateTime.UtcNow
-            });
+            await notifier.NotifierOrderBookAsync(ordre.Stock.Symbole, book.ObtenirSnapshot());
         }
 
         return CreatedAtAction(nameof(GetOrdre), new { id = ordre.Id }, new

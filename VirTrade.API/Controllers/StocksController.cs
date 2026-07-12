@@ -42,16 +42,8 @@ public class StocksController : ControllerBase
     [HttpGet("{symbole}/historique")]
     public async Task<IActionResult> GetHistorique(string symbole)
     {
-        var stocks = await _stockRepository.GetAllAsync();
-        var stock = stocks.FirstOrDefault(s =>
-            s.Symbole.Equals(symbole, StringComparison.OrdinalIgnoreCase));
-
-        if (stock == null)
-            return NotFound($"Stock '{symbole}' introuvable");
-
-        // Pour l'instant, on renvoie la collection HistoriquePrix du stock
-        // (vide tant que MarketSimulator n'a pas tourné - normal à ce stade)
-        return Ok(stock.HistoriquePrix);
+        var historique = await _stockRepository.GetHistoriqueAsync(symbole);
+        return Ok(historique);
     }
 
     // GET /api/stocks/{symbole}/orderbook
@@ -59,28 +51,6 @@ public class StocksController : ControllerBase
     public IActionResult GetOrderBook(string symbole)
     {
         var book = _orderBookService.GetBook(symbole);
-        
-        var bids = book.GetBids()
-            .GroupBy(o => o.PrixLimite ?? decimal.MaxValue)
-            .OrderByDescending(g => g.Key)
-            .Select(g => new { prix = g.Key, quantite = g.Sum(o => o.Quantite - o.QuantiteExecutee) })
-            .ToList();
-
-        var asks = book.GetAsks()
-            .GroupBy(o => o.PrixLimite ?? decimal.MinValue)
-            .OrderBy(g => g.Key)
-            .Select(g => new { prix = g.Key, quantite = g.Sum(o => o.Quantite - o.QuantiteExecutee) })
-            .ToList();
-
-        var spread = book.Spread();
-
-        return Ok(new
-        {
-            symbole,
-            bids,
-            asks,
-            spread,
-            timestamp = DateTime.UtcNow
-        });
+        return Ok(book.ObtenirSnapshot());
     }
 }

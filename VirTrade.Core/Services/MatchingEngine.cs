@@ -1,4 +1,4 @@
-﻿using VirTrade.Core.Entities;
+using VirTrade.Core.Entities;
 using VirTrade.Core.Enums;
 using VirTrade.Core.Interfaces;
 
@@ -20,7 +20,44 @@ public class MatchingEngine(
             var ask = book.MeilleurAsk();
 
             if (bid == null || ask == null)
+            {
+                if (nouvelOrdre.QuantiteRestante() > 0
+                    && nouvelOrdre.Statut != StatutOrdre.Cancelled
+                    && nouvelOrdre.TypeOrdre == TypeOrdre.Market)
+                {
+                    var prixExec = nouvelOrdre.Stock.PrixActuel;
+                    var qteExec = nouvelOrdre.QuantiteRestante();
+
+                    var tradeExec = new Trade
+                    {
+                        Quantite      = qteExec,
+                        PrixExecution = prixExec,
+                        BuyOrderId    = nouvelOrdre.Id,
+                        BuyOrder      = nouvelOrdre,
+                        SellOrderId   = nouvelOrdre.Id,
+                        SellOrder     = nouvelOrdre,
+                        StockId       = nouvelOrdre.StockId,
+                        Stock         = nouvelOrdre.Stock,
+                        ExecutedAt    = DateTime.UtcNow
+                    };
+
+                    nouvelOrdre.QuantiteExecutee += qteExec;
+                    nouvelOrdre.Statut = StatutOrdre.Filled;
+                    orderBookService.Retirer(nouvelOrdre);
+
+                    await repository.PersisterTradeAsync(tradeExec, nouvelOrdre, nouvelOrdre, qteExec, prixExec);
+
+                    nouvelOrdre.Stock.PrixActuel = prixExec;
+
+                    tradesExecutes.Add(tradeExec);
+
+                    await notifier.NotifierNouveauTradeAsync(tradeExec);
+                    await notifier.NotifierPrixUpdateAsync(nouvelOrdre.Stock.Symbole, prixExec);
+                    await notifier.NotifierOrderBookAsync(nouvelOrdre.Stock.Symbole, book.ObtenirSnapshot());
+                }
+
                 break;
+            }
 
             var prixBid = bid.PrixLimite ?? decimal.MaxValue;
             var prixAsk = ask.PrixLimite ?? decimal.MinValue;
@@ -65,17 +102,7 @@ public class MatchingEngine(
 
             await notifier.NotifierNouveauTradeAsync(trade);
             await notifier.NotifierPrixUpdateAsync(nouvelOrdre.Stock.Symbole, nouveauPrix);
-            await notifier.NotifierOrderBookAsync(
-                nouvelOrdre.Stock.Symbole,
-                new
-                {
-                    symbole = nouvelOrdre.Stock.Symbole,
-                    bids = book.GetBids(),
-                    asks = book.GetAsks(),
-                    spread = book.Spread(),
-                    timestamp = DateTime.UtcNow
-                }
-            );
+            await notifier.NotifierOrderBookAsync(nouvelOrdre.Stock.Symbole, book.ObtenirSnapshot());
         }
 
         return tradesExecutes;

@@ -1,4 +1,4 @@
-﻿using VirTrade.Core.Entities;
+using VirTrade.Core.Entities;
 using VirTrade.Core.Enums;
 
 namespace VirTrade.Core.Services;
@@ -32,12 +32,9 @@ public class OrderBook
         {
             var book = ordre.SensOrdre == SensOrdre.Buy ? _bids : _asks;
 
-            // Market order : pas de PrixLimite → prix fictif pour la position
-            // en tête de book (MaxValue côté bid = priorité absolue,
-            // MinValue côté ask = idem)
-            var prix = ordre.SensOrdre == SensOrdre.Buy
-                ? ordre.PrixLimite ?? decimal.MaxValue
-                : ordre.PrixLimite ?? decimal.MinValue;
+            // Market order : on utilise le prix courant du stock pour l’affichage
+            // et le calcul du spread, sans injecter des valeurs artificielles.
+            var prix = ObtenirPrixPourAffichage(ordre);
 
             if (!book.ContainsKey(prix))
                 book[prix] = [];
@@ -52,9 +49,7 @@ public class OrderBook
         {
             var book = ordre.SensOrdre == SensOrdre.Buy ? _bids : _asks;
 
-            var prix = ordre.SensOrdre == SensOrdre.Buy
-                ? ordre.PrixLimite ?? decimal.MaxValue
-                : ordre.PrixLimite ?? decimal.MinValue;
+            var prix = ObtenirPrixPourAffichage(ordre);
 
             if (!book.TryGetValue(prix, out var liste))
                 return;
@@ -103,12 +98,15 @@ public class OrderBook
             if (bid == null || ask == null)
                 return 0;
 
-            var prixBid = bid.PrixLimite ?? decimal.MaxValue;
-            var prixAsk = ask.PrixLimite ?? decimal.MinValue;
+            var prixBid = ObtenirPrixPourAffichage(bid);
+            var prixAsk = ObtenirPrixPourAffichage(ask);
 
             return prixAsk - prixBid;
         }
     }
+
+    public static decimal ObtenirPrixPourAffichage(Ordre ordre)
+        => ordre.PrixLimite ?? ordre.Stock?.PrixActuel ?? 0m;
 
     // Copies défensives → personne ne peut modifier le book interne
     // depuis l'extérieur via ces listes
@@ -122,5 +120,32 @@ public class OrderBook
     {
         lock (_lock)
             return _asks.Values.SelectMany(liste => liste).ToList();
+    }
+
+    public object ObtenirSnapshot()
+    {
+        lock (_lock)
+        {
+            var bids = GetBids()
+                .GroupBy(ObtenirPrixPourAffichage)
+                .OrderByDescending(g => g.Key)
+                .Select(g => new { prix = g.Key, quantite = g.Sum(o => o.Quantite - o.QuantiteExecutee) })
+                .ToList();
+
+            var asks = GetAsks()
+                .GroupBy(ObtenirPrixPourAffichage)
+                .OrderBy(g => g.Key)
+                .Select(g => new { prix = g.Key, quantite = g.Sum(o => o.Quantite - o.QuantiteExecutee) })
+                .ToList();
+
+            return new
+            {
+                symbole = Symbole,
+                bids,
+                asks,
+                spread = Spread(),
+                timestamp = DateTime.UtcNow
+            };
+        }
     }
 }

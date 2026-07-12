@@ -7,6 +7,8 @@ using VirTrade.API;
 using VirTrade.API.Middlewares;
 using VirTrade.Core.Interfaces;
 using VirTrade.Core.Services;
+using VirTrade.Core.Entities;
+using VirTrade.Core.Enums;
 using VirTrade.Infrastructure.Notifications;
 using VirTrade.Infrastructure.Persistence;
 
@@ -142,6 +144,37 @@ app.MapControllers();
 
 // Hub SignalR (section 11 + section 15.11)
 app.MapHub<BourseHub>("/hubs/bourse");
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Création d'un compte administrateur si aucun n'existe
+    if (!dbContext.Utilisateurs.Any(u => u.Role == Role.Admin))
+    {
+        var admin = new Utilisateur
+        {
+            Nom = "Admin",
+            Email = "admin@virtrade.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+            Role = Role.Admin,
+            CreatedAt = DateTime.UtcNow
+        };
+        dbContext.Utilisateurs.Add(admin);
+        
+        var configCapital = dbContext.ConfigsMarche.FirstOrDefault(c => c.Cle == "capital_initial");
+        decimal capital = configCapital != null ? decimal.Parse(configCapital.Valeur) : 100000m;
+        
+        var portefeuille = new Portefeuille
+        {
+            Utilisateur = admin,
+            SoldeCash = capital,
+            CreatedAt = DateTime.UtcNow
+        };
+        dbContext.Portefeuilles.Add(portefeuille);
+        
+        dbContext.SaveChanges();
+    }
+}
 
 await app.Services.GetRequiredService<IOrderBookService>().InitialiserAsync();
 

@@ -91,6 +91,20 @@ public class MatchingEngineTests
     }
 
     [Fact]
+    public async Task MarketOrder_SansContrePartie_ExecuteAuPrixActuelEtRemplitLordre()
+    {
+        var bid = CreerOrdre(SensOrdre.Buy, TypeOrdre.Market, null, quantite: 10, id: 2);
+        _book.Inject(bid);
+
+        var trades = await _engine.ExecuterAsync(bid);
+
+        trades.Should().HaveCount(1);
+        trades[0].Quantite.Should().Be(10);
+        trades[0].PrixExecution.Should().Be(bid.Stock!.PrixActuel);
+        bid.Statut.Should().Be(StatutOrdre.Filled);
+    }
+
+    [Fact]
     public async Task LimitOrder_ResteOuvert_SiPrixNonAtteint()
     {
         var ask = CreerOrdre(SensOrdre.Sell, TypeOrdre.Limit, 155m, id: 1);

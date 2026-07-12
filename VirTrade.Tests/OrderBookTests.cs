@@ -99,4 +99,13 @@ public class OrderBookTests
 
         book.Spread().Should().Be(0);
     }
+
+    [Fact]
+    public void ObtenirPrixPourAffichage_MarketOrder_UtilisePrixActuelStock()
+    {
+        var ordre = CreerOrdre(SensOrdre.Buy, null, id: 1);
+        ordre.Stock!.PrixActuel = 150.25m;
+
+        OrderBook.ObtenirPrixPourAffichage(ordre).Should().Be(150.25m);
+    }
 }

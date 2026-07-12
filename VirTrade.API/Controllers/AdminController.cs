@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using VirTrade.Core.Entities;
 using VirTrade.Core.Interfaces;
 using VirTrade.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 
 namespace VirTrade.API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
+[Authorize(Roles = "Admin")]
 public class AdminController : ControllerBase
 {
     private readonly IStockRepository _stockRepository;
