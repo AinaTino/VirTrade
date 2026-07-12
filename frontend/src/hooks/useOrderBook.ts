@@ -16,15 +16,23 @@ type ApiOrder = {
 
 function aggregateLevels(orders: ApiOrder[] = []) {
   const levels = new Map<number, number>()
+
   for (const order of orders) {
     const prix = order.prix ?? order.Prix ?? order.prixLimite ?? order.PrixLimite
     if (prix == null || !Number.isFinite(prix)) continue
-    const quantite = order.quantite ?? order.Quantite ?? 0
-    const quantiteExecutee = order.quantiteExecutee ?? order.QuantiteExecutee ?? 0
-    const remaining = quantite - quantiteExecutee
-    if (remaining > 0) levels.set(prix, (levels.get(prix) ?? 0) + remaining)
+
+    const quantite = Number(order.quantite ?? order.Quantite ?? 0)
+    const quantiteExecutee = Number(order.quantiteExecutee ?? order.QuantiteExecutee ?? 0)
+    const remaining = Math.max(quantite - quantiteExecutee, 0)
+
+    if (remaining > 0) {
+      levels.set(Number(prix), (levels.get(Number(prix)) ?? 0) + remaining)
+    }
   }
-  return [...levels].map(([prix, quantite]) => ({ prix, quantite }))
+
+  return [...levels.entries()]
+    .map(([prix, quantite]) => ({ prix, quantite }))
+    .sort((a, b) => a.prix - b.prix)
 }
 
 function normalizeUpdate(symbole: string, payload: unknown): OrderBookSnapshot | null {

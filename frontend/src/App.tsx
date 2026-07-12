@@ -8,7 +8,11 @@ import { MarketPage } from './pages/MarketPage'
 import { TradingPage } from './pages/TradingPage'
 import { PortfolioPage } from './pages/PortfolioPage'
 import { LeaderboardPage } from './pages/LeaderboardPage'
-
+import { AdminLayout } from './components/admin/AdminLayout'
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
+import { AdminStocksPage } from './pages/admin/AdminStocksPage'
+import { AdminUsersPage } from './pages/admin/AdminUsersPage'
+import { AdminConfigPage } from './pages/admin/AdminConfigPage'
 function RequireAuth({ children }: { children: ReactNode }) {
   const { utilisateur, loading } = useAuth()
 
@@ -20,6 +24,21 @@ function RequireAuth({ children }: { children: ReactNode }) {
     )
   }
   if (!utilisateur) return <Navigate to="/connexion" replace />
+  return <>{children}</>
+}
+
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { utilisateur, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-canvas)] text-[13px] text-[var(--color-ink-muted)]">
+        Chargement…
+      </div>
+    )
+  }
+  if (!utilisateur) return <Navigate to="/connexion" replace />
+  if (utilisateur.role !== 'ADMIN') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -70,6 +89,21 @@ function App() {
           </RequireAuth>
         }
       />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin"
+        element={
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        }
+      >
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="stocks" element={<AdminStocksPage />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="config" element={<AdminConfigPage />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

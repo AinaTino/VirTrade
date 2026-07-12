@@ -29,6 +29,7 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   localStorage.setItem('virtrade_jwt', token)
 
   const { data: utilisateur } = await apiClient.get('/auth/me')
+  utilisateur.role = utilisateur.role.toUpperCase()
   return { token, utilisateur }
 }
 
@@ -50,5 +51,6 @@ export async function logout(): Promise<void> {
 
 export async function me(): Promise<Utilisateur> {
   const { data } = await apiClient.get<Utilisateur>('/auth/me')
+  data.role = data.role.toUpperCase() as any
   return data
 }

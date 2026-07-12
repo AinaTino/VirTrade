@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSignalR } from './useSignalR'
-import { getPortefeuille } from '../api/portfolio'
+import { getPortefeuille, normalizePortefeuillePayload } from '../api/portfolio'
 import type { Portefeuille, PortefeuilleUpdateEvent } from '../types'
 
 export function usePortfolio() {
@@ -23,7 +23,7 @@ export function usePortfolio() {
   }, [])
 
   useEffect(() => {
-    const onUpdate = (payload: unknown) => setPortefeuille(payload as PortefeuilleUpdateEvent)
+    const onUpdate = (payload: unknown) => setPortefeuille(normalizePortefeuillePayload(payload as PortefeuilleUpdateEvent))
     connection.on('PortefeuilleUpdate', onUpdate)
     return () => connection.off('PortefeuilleUpdate', onUpdate)
   }, [connection])

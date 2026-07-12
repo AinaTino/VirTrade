@@ -1,9 +1,8 @@
 import axios from 'axios'
 
-// Base URL du backend ASP.NET Core (section 10 — Conventions)
-// À activer dès que le backend est disponible (semaine 3 du planning).
+// Base URL du backend ASP.NET Core. En développement, on passe par le proxy Vite.
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'https://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 

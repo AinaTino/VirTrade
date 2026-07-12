@@ -36,7 +36,7 @@ export function CandlestickChart({ symbole }: { symbole: string }) {
       }
 
       return [
-        ...previous.slice(-59),
+        ...previous.slice(-499),
         { timestamp: periode, open: derniere.close, high: prix, low: prix, close: prix, volume: 0 },
       ]
     })
@@ -112,7 +112,23 @@ export function CandlestickChart({ symbole }: { symbole: string }) {
   const options: ApexOptions = {
     chart: {
       type: 'candlestick',
-      toolbar: { show: false },
+      toolbar: { 
+        show: true,
+        tools: {
+          download: false,
+          selection: false,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true
+        }
+      },
+      zoom: {
+        enabled: true,
+        type: 'x',
+        autoScaleYaxis: true
+      },
       fontFamily: 'JetBrains Mono, monospace',
       animations: { enabled: false },
       background: 'transparent',

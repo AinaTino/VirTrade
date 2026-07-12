@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { LineChart, Wallet, Trophy, LogOut, CandlestickChart } from 'lucide-react'
+import { LineChart, Wallet, Trophy, LogOut, CandlestickChart, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useSignalR } from '../../hooks/useSignalR'
 import { ConnectionStatusDot } from './ConnectionStatusDot'
@@ -52,6 +52,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {label}
               </NavLink>
             ))}
+            {utilisateur?.role === 'ADMIN' && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-[13px] font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand-hover)]'
+                      : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-canvas)]'
+                  }`
+                }
+              >
+                <Shield size={15} strokeWidth={2} />
+                Admin
+              </NavLink>
+            )}
           </nav>
 
           <div className="ml-auto flex items-center gap-4">
@@ -88,6 +103,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               {label}
             </NavLink>
           ))}
+          {utilisateur?.role === 'ADMIN' && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-[13px] font-medium whitespace-nowrap ${
+                  isActive ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand-hover)]' : 'text-[var(--color-ink-muted)]'
+                }`
+              }
+            >
+              <Shield size={14} />
+              Admin
+            </NavLink>
+          )}
         </nav>
       </header>
 

@@ -13,6 +13,13 @@ export interface Utilisateur {
   createdAt: string
 }
 
+export interface ConfigMarche {
+  id: number
+  cle: string
+  valeur: string
+  description: string
+}
+
 export interface Stock {
   id: number
   symbole: string
