@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typographie */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Roboto Mono", ui-monospace, monospace;
+
+  /* Palette — terminal de trading en mode clair */
+  --color-canvas: #F6F7F9;       /* fond général, gris froid très clair */
+  --color-surface: #FFFFFF;      /* panneaux / cartes */
+  --color-surface-raised: #FCFCFD;
+  --color-border: #E3E6EB;       /* lignes hairline */
+  --color-border-strong: #CBD2DC;
+
+  --color-ink: #10141B;          /* texte principal — graphite quasi-noir */
+  --color-ink-muted: #667085;    /* texte secondaire */
+  --color-ink-faint: #9AA4B2;    /* texte tertiaire / placeholders */
+
+  --color-brand: #4B5EFC;        /* accent primaire — indigo électrique */
+  --color-brand-hover: #3B4CE0;
+  --color-brand-soft: #EEF0FF;
+
+  --color-bid: #0E9F6E;          /* achat / positif — émeraude */
+  --color-bid-soft: #E7F8F1;
+  --color-ask: #E11D48;          /* vente / négatif — rose vif */
+  --color-ask-soft: #FDECEF;
+
+  --color-warn: #D97706;         /* statut partiel / en attente */
+  --color-warn-soft: #FDF3E3;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-soft);
+    color: var(--color-brand-hover);
+  }
+
+  /* Chiffres toujours alignés en tabulaire — essentiel pour un terminal de prix */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+}
+
+@layer utilities {
+  /* Flash bref au tick de prix — signature micro-interaction du terminal */
+  @keyframes flash-up {
+    0% { background-color: var(--color-bid-soft); }
+    100% { background-color: transparent; }
+  }
+  @keyframes flash-down {
+    0% { background-color: var(--color-ask-soft); }
+    100% { background-color: transparent; }
+  }
+  .flash-up { animation: flash-up 700ms ease-out; }
+  .flash-down { animation: flash-down 700ms ease-out; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .animate-pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+}

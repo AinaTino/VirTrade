@@ -3,3 +3,28 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# .NET
+*.user
+*.suo
+.vs/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+appsettings.*.json  ← sauf appsettings.json de base sans secrets
+*.pfx
+*.key
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env       ← tokens, URLs d'API
+
+# OS
+.DS_Store
+Thumbs.db
+
+.idea/
+.idea/*
